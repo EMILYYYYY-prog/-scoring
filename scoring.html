@@ -1,0 +1,1032 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個人賽評分表 — Personal Impact Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-mid: #263354;
+    --olive: #4a5e2f;
+    --olive-light: #6b8540;
+    --gold: #c9973a;
+    --gold-light: #e8b84b;
+    --cream: #f8f4ec;
+    --cream-dark: #ede8dc;
+    --text: #1a2744;
+    --muted: #6b7280;
+    --white: #ffffff;
+    --red: #c0392b;
+    --green-bg: #eef3e8;
+    --navy-bg: #eef0f5;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Noto Serif TC', serif;
+    background: var(--cream);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ── Header ── */
+  header {
+    background: var(--navy);
+    padding: 28px 40px 24px;
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    border-bottom: 4px solid var(--gold);
+  }
+  .header-icon {
+    width: 56px; height: 56px;
+    background: var(--gold);
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px; flex-shrink: 0;
+  }
+  header h1 {
+    font-size: 28px; font-weight: 700; color: var(--white);
+    letter-spacing: 2px;
+  }
+  header p { font-size: 13px; color: var(--gold-light); margin-top: 3px; letter-spacing: 1px; }
+  .header-tagline {
+    margin-left: auto;
+    font-size: 14px; color: var(--gold-light);
+    font-style: italic; letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  /* ── Judge setup panel ── */
+  .setup-panel {
+    background: var(--white);
+    border-bottom: 1px solid var(--cream-dark);
+    padding: 20px 40px;
+    display: flex; align-items: center; gap: 24px; flex-wrap: wrap;
+  }
+  .setup-panel label { font-size: 13px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+  .setup-panel input, .setup-panel select {
+    border: 1.5px solid var(--cream-dark);
+    border-radius: 6px;
+    padding: 8px 14px;
+    font-family: inherit; font-size: 14px;
+    color: var(--text);
+    background: var(--cream);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .setup-panel input:focus, .setup-panel select:focus {
+    border-color: var(--gold);
+  }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .separator { width: 1px; height: 40px; background: var(--cream-dark); }
+
+  /* ── Main layout ── */
+  main {
+    max-width: 1300px;
+    margin: 32px auto;
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 28px;
+  }
+  @media (max-width: 900px) {
+    main { grid-template-columns: 1fr; }
+    header { padding: 20px 20px; }
+    .setup-panel { padding: 16px 20px; }
+    .header-tagline { display: none; pointer-events: none; }
+  }
+
+  /* ── Task card ── */
+  .task-card {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.08);
+  }
+  .task-header {
+    display: flex; align-items: center; gap: 16px;
+    padding: 20px 24px;
+  }
+  .task-header.navy { background: var(--navy); }
+  .task-header.olive { background: var(--olive); }
+  .task-num {
+    width: 48px; height: 48px;
+    background: rgba(255,255,255,0.15);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px; font-weight: 700; color: var(--white);
+    flex-shrink: 0;
+  }
+  .task-title-block h2 { font-size: 20px; font-weight: 700; color: var(--white); }
+  .task-title-block p { font-size: 12px; color: rgba(255,255,255,0.7); margin-top: 3px; }
+  .task-badge {
+    margin-left: auto;
+    background: rgba(255,255,255,0.2);
+    color: var(--white);
+    font-size: 12px; font-weight: 600;
+    padding: 4px 12px; border-radius: 20px;
+    white-space: nowrap;
+  }
+
+  /* ── Score legend ── */
+  .score-legend {
+    display: flex; gap: 10px; align-items: center;
+    padding: 10px 24px;
+    background: var(--cream);
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 12px; color: var(--muted);
+  }
+  .legend-item {
+    display: flex; align-items: center; gap: 5px;
+  }
+  .legend-dot {
+    width: 22px; height: 22px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 700; color: var(--white);
+  }
+  .dot-0 { background: #cbd5e1; color: #475569; }
+  .dot-5 { background: var(--gold); }
+  .dot-10 { background: var(--navy); }
+
+  /* ── Dimension section ── */
+  .dimension {
+    border-bottom: 1px solid var(--cream-dark);
+  }
+  .dimension:last-of-type { border-bottom: none; }
+  .dim-header {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 24px 10px;
+    background: var(--cream);
+  }
+  .dim-icon {
+    width: 34px; height: 34px;
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px;
+  }
+  .dim-icon.navy-icon { background: var(--navy-bg); }
+  .dim-icon.olive-icon { background: var(--green-bg); }
+  .dim-name { font-size: 15px; font-weight: 700; }
+  .dim-sub { font-size: 11px; color: var(--muted); }
+  .dim-subtotal {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace;
+    font-size: 18px; font-weight: 700;
+  }
+  .dim-subtotal.navy-color { color: var(--navy); }
+  .dim-subtotal.olive-color { color: var(--olive); }
+  .dim-max { font-size: 11px; color: var(--muted); margin-left: 2px; }
+
+  /* ── Criteria rows ── */
+  .criteria-row {
+    display: flex; align-items: center;
+    padding: 10px 24px;
+    gap: 12px;
+    transition: background 0.15s;
+  }
+  .criteria-row:hover { background: var(--cream); }
+  .criteria-label {
+    flex: 1; font-size: 13px; color: var(--text); line-height: 1.4;
+  }
+  .score-buttons { display: flex; gap: 6px; flex-shrink: 0; }
+
+  /* Task 1: 3 buttons (0/5/10) */
+  .btn-score {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 2px solid var(--cream-dark);
+    background: var(--white);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px; font-weight: 600;
+    cursor: pointer;
+    color: var(--muted);
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-score:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-score.active-0 { background: #cbd5e1; border-color: #94a3b8; color: #475569; }
+  .btn-score.active-5-navy { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.active-10 { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .btn-score.active-5-olive { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.active-5-only { background: var(--olive); border-color: var(--olive); color: var(--white); }
+
+  /* ── Dimension total bar ── */
+  .dim-total-row {
+    display: flex; align-items: center; justify-content: flex-end;
+    padding: 8px 24px 12px;
+    gap: 8px;
+    background: var(--cream);
+  }
+  .dim-total-label { font-size: 12px; color: var(--muted); }
+  .dim-total-val {
+    font-family: 'DM Mono', monospace;
+    font-size: 20px; font-weight: 700;
+  }
+  .dim-total-val.navy-color { color: var(--navy); }
+  .dim-total-val.olive-color { color: var(--olive); }
+
+  /* ── Grand total footer ── */
+  .task-footer {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 18px 24px;
+  }
+  .task-footer.navy-footer { background: var(--navy); }
+  .task-footer.olive-footer { background: var(--olive); }
+  .footer-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.8); letter-spacing: 2px; }
+  .footer-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 36px; font-weight: 700; color: var(--white);
+  }
+  .footer-max { font-size: 16px; color: rgba(255,255,255,0.5); }
+
+  /* ── Progress bar ── */
+  .progress-wrap {
+    padding: 0 24px 16px;
+    background: var(--cream);
+  }
+  .progress-track {
+    height: 6px; border-radius: 3px;
+    background: var(--cream-dark);
+    overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; border-radius: 3px;
+    transition: width 0.3s ease;
+  }
+  .progress-fill.navy-fill { background: var(--navy); }
+  .progress-fill.olive-fill { background: var(--olive); }
+
+  /* ── Comment box ── */
+  .comment-section {
+    padding: 16px 24px;
+    border-top: 1px solid var(--cream-dark);
+  }
+  .comment-section label { font-size: 12px; color: var(--muted); font-weight: 600; display: block; margin-bottom: 6px; }
+  .comment-section textarea {
+    width: 100%; border: 1.5px solid var(--cream-dark);
+    border-radius: 8px; padding: 10px 12px;
+    font-family: inherit; font-size: 13px;
+    color: var(--text); background: var(--cream);
+    resize: vertical; min-height: 72px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .comment-section textarea:focus { border-color: var(--gold); }
+
+  /* ── Action buttons ── */
+  .actions {
+    max-width: 1300px;
+    margin: 8px auto 40px;
+    padding: 0 24px;
+    display: flex; gap: 14px; flex-wrap: wrap;
+  }
+  .btn-action {
+    padding: 13px 28px;
+    border-radius: 8px;
+    border: none; cursor: pointer;
+    font-family: inherit; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--navy); color: var(--white); }
+  .btn-primary:hover { background: var(--navy-mid); transform: translateY(-1px); }
+  .btn-secondary { background: var(--olive); color: var(--white); }
+  .btn-secondary:hover { background: var(--olive-light); transform: translateY(-1px); }
+  .btn-ghost {
+    background: var(--white); color: var(--muted);
+    border: 1.5px solid var(--cream-dark);
+  }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-submit { background: var(--gold); color: var(--white); }
+  .btn-submit:hover { background: var(--gold-light); transform: translateY(-1px); }
+
+  /* ── Summary modal ── */
+  .modal-overlay {
+    display: none; pointer-events: none;
+    position: fixed; inset: 0;
+    background: rgba(26,39,68,0.6);
+    z-index: 100;
+    align-items: center; justify-content: center;
+    padding: 20px;
+  }
+  .modal-overlay.open { display: flex; pointer-events: all; }
+  .modal {
+    background: var(--white);
+    border-radius: 16px;
+    max-width: 600px; width: 100%;
+    max-height: 90vh; overflow-y: auto;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+  .modal-header {
+    background: var(--navy);
+    padding: 24px 28px;
+    border-radius: 16px 16px 0 0;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  .modal-header h3 { font-size: 18px; color: var(--white); }
+  .modal-close {
+    background: none; border: none; cursor: pointer;
+    color: rgba(255,255,255,0.6); font-size: 22px;
+    padding: 4px; border-radius: 4px;
+    transition: color 0.2s;
+  }
+  .modal-close:hover { color: var(--white); }
+  .modal-body { padding: 28px; }
+  .summary-info { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 24px; }
+  .info-item { background: var(--cream); border-radius: 8px; padding: 12px 16px; }
+  .info-item .info-label { font-size: 11px; color: var(--muted); font-weight: 600; letter-spacing: 0.5px; }
+  .info-item .info-val { font-size: 15px; font-weight: 700; color: var(--text); margin-top: 3px; }
+  .summary-scores { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  .score-block { border-radius: 12px; padding: 20px; text-align: center; }
+  .score-block.navy-block { background: var(--navy); }
+  .score-block.olive-block { background: var(--olive); }
+  .score-block h4 { font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.7); letter-spacing: 1px; }
+  .score-block .big-score { font-family: 'DM Mono', monospace; font-size: 48px; font-weight: 700; color: var(--white); line-height: 1; margin: 8px 0 4px; }
+  .score-block .score-max { font-size: 13px; color: rgba(255,255,255,0.5); }
+  .dim-breakdown { margin-top: 20px; }
+  .dim-breakdown h4 { font-size: 13px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; margin-bottom: 10px; }
+  .breakdown-row { display: flex; align-items: center; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid var(--cream-dark); font-size: 13px; }
+  .breakdown-row:last-child { border-bottom: none; }
+  .breakdown-val { font-family: 'DM Mono', monospace; font-weight: 700; }
+
+  @media print {
+    .actions, .modal-overlay { display: none !important; }
+    .setup-panel input, .setup-panel select { border: none; background: none; }
+    .task-card { box-shadow: none; break-inside: avoid; }
+    body { background: white; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">⭐</div>
+  <div>
+    <h1>個人賽 評分表</h1>
+    <p>Personal Impact Challenge</p>
+  </div>
+  <div class="header-tagline">影響力，從你開始！</div>
+</header>
+
+<div class="setup-panel">
+  <div class="field-group">
+    <label>參賽者姓名</label>
+    <input type="text" id="contestant-name" placeholder="請輸入姓名" style="width:160px;">
+  </div>
+  <div class="separator"></div>
+  <div class="field-group">
+    <label>評委</label>
+    <select id="judge-num" style="width:120px;">
+      <option value="Nina">Nina</option>
+      <option value="Allen">Allen</option>
+    </select>
+  </div>
+  <div class="separator"></div>
+  <div class="field-group">
+    <label>評分日期</label>
+    <input type="date" id="score-date" style="width:150px;">
+  </div>
+</div>
+
+<main>
+  <!-- ══ TASK 1 ══ -->
+  <div class="task-card" id="task1-card">
+    <div class="task-header navy">
+      <div class="task-num">1</div>
+      <div class="task-title-block">
+        <h2>一分鐘自我介紹</h2>
+        <p>評分方式：0 = 未展現　5 = 普通　10 = 卓越</p>
+      </div>
+      <span class="task-badge">1 分鐘</span>
+    </div>
+
+    <div class="score-legend">
+      <span class="legend-item"><span class="legend-dot dot-0">0</span> 未展現</span>
+      <span class="legend-item"><span class="legend-dot dot-5">5</span> 普通</span>
+      <span class="legend-item"><span class="legend-dot dot-10">10</span> 卓越</span>
+    </div>
+
+    <!-- Hook -->
+    <div class="dimension" data-dim="hook1" data-task="1">
+      <div class="dim-header">
+        <div class="dim-icon navy-icon">🧲</div>
+        <div>
+          <div class="dim-name">Hook</div>
+          <div class="dim-sub">吸引注意力</div>
+        </div>
+        <div class="dim-subtotal navy-color" id="hook1-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="h1a" data-max="10" data-task="1">
+        <span class="criteria-label">是否快速抓住注意力</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('h1a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('h1a',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('h1a',10,this)">10</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="h1b" data-max="10" data-task="1">
+        <span class="criteria-label">是否具備記憶點</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('h1b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('h1b',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('h1b',10,this)">10</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill navy-fill" id="hook1-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Story -->
+    <div class="dimension" data-dim="story1" data-task="1">
+      <div class="dim-header">
+        <div class="dim-icon navy-icon">📖</div>
+        <div>
+          <div class="dim-name">Story</div>
+          <div class="dim-sub">故事與脈絡</div>
+        </div>
+        <div class="dim-subtotal navy-color" id="story1-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="s1a" data-max="10" data-task="1">
+        <span class="criteria-label">是否具備故事感</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('s1a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('s1a',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('s1a',10,this)">10</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="s1b" data-max="10" data-task="1">
+        <span class="criteria-label">是否有清楚脈絡</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('s1b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('s1b',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('s1b',10,this)">10</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill navy-fill" id="story1-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Data -->
+    <div class="dimension" data-dim="data1" data-task="1">
+      <div class="dim-header">
+        <div class="dim-icon navy-icon">📊</div>
+        <div>
+          <div class="dim-name">Data</div>
+          <div class="dim-sub">個人價值與特色</div>
+        </div>
+        <div class="dim-subtotal navy-color" id="data1-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="d1a" data-max="10" data-task="1">
+        <span class="criteria-label">是否展現個人價值</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('d1a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('d1a',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('d1a',10,this)">10</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="d1b" data-max="10" data-task="1">
+        <span class="criteria-label">是否具備個人特色</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('d1b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('d1b',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('d1b',10,this)">10</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill navy-fill" id="data1-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Impact -->
+    <div class="dimension" data-dim="impact1" data-task="1">
+      <div class="dim-header">
+        <div class="dim-icon navy-icon">🎯</div>
+        <div>
+          <div class="dim-name">Impact</div>
+          <div class="dim-sub">影響力與印象</div>
+        </div>
+        <div class="dim-subtotal navy-color" id="impact1-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="i1a" data-max="10" data-task="1">
+        <span class="criteria-label">是否讓人留下印象</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('i1a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('i1a',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('i1a',10,this)">10</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="i1b" data-max="10" data-task="1">
+        <span class="criteria-label">是否具備影響力／感染力</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('i1b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('i1b',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('i1b',10,this)">10</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill navy-fill" id="impact1-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Delivery -->
+    <div class="dimension" data-dim="delivery1" data-task="1">
+      <div class="dim-header">
+        <div class="dim-icon navy-icon">🎙️</div>
+        <div>
+          <div class="dim-name">Delivery</div>
+          <div class="dim-sub">表達與呈現</div>
+        </div>
+        <div class="dim-subtotal navy-color" id="delivery1-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="del1a" data-max="10" data-task="1">
+        <span class="criteria-label">表達是否清楚自然</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('del1a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('del1a',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('del1a',10,this)">10</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="del1b" data-max="10" data-task="1">
+        <span class="criteria-label">是否具備節奏與穩定度</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore('del1b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore('del1b',5,this)">5</button>
+          <button class="btn-score" onclick="setScore('del1b',10,this)">10</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill navy-fill" id="delivery1-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <div class="comment-section">
+      <label>評委備註</label>
+      <textarea id="comment1" placeholder="針對 Task 1 的補充說明或觀察..."></textarea>
+    </div>
+
+    <div class="task-footer navy-footer">
+      <span class="footer-label">TASK 1 TOTAL</span>
+      <div>
+        <span class="footer-score" id="task1-total">0</span>
+        <span class="footer-max"> / 100</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TASK 2 ══ -->
+  <div class="task-card" id="task2-card">
+    <div class="task-header olive">
+      <div class="task-num">2</div>
+      <div class="task-title-block">
+        <h2>二分鐘數據解讀</h2>
+        <p>評分方式：每項最高 5 分　0 = 未展現　5 = 完全展現</p>
+      </div>
+      <span class="task-badge">2 分鐘</span>
+    </div>
+
+    <div class="score-legend">
+      <span class="legend-item"><span class="legend-dot dot-0">0</span> 未展現</span>
+      <span class="legend-item"><span class="legend-dot dot-5">5</span> 完全展現</span>
+    </div>
+
+    <!-- Hook -->
+    <div class="dimension" data-dim="hook2" data-task="2">
+      <div class="dim-header">
+        <div class="dim-icon olive-icon">🧲</div>
+        <div>
+          <div class="dim-name">Hook</div>
+          <div class="dim-sub">吸引注意力</div>
+        </div>
+        <div class="dim-subtotal olive-color" id="hook2-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="h2a" data-max="5" data-task="2">
+        <span class="criteria-label">是否快速抓住重點</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('h2a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('h2a',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="h2b" data-max="5" data-task="2">
+        <span class="criteria-label">是否有明確核心觀點</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('h2b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('h2b',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="h2c" data-max="5" data-task="2">
+        <span class="criteria-label">是否吸引聽眾注意力</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('h2c',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('h2c',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="h2d" data-max="5" data-task="2">
+        <span class="criteria-label">是否符合報告情境</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('h2d',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('h2d',5,this)">5</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill olive-fill" id="hook2-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Story -->
+    <div class="dimension" data-dim="story2" data-task="2">
+      <div class="dim-header">
+        <div class="dim-icon olive-icon">📖</div>
+        <div>
+          <div class="dim-name">Story</div>
+          <div class="dim-sub">邏輯與脈絡</div>
+        </div>
+        <div class="dim-subtotal olive-color" id="story2-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="s2a" data-max="5" data-task="2">
+        <span class="criteria-label">是否具備邏輯與脈絡</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('s2a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('s2a',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="s2b" data-max="5" data-task="2">
+        <span class="criteria-label">是否能解釋背後原因</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('s2b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('s2b',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="s2c" data-max="5" data-task="2">
+        <span class="criteria-label">是否能串連數據故事</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('s2c',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('s2c',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="s2d" data-max="5" data-task="2">
+        <span class="criteria-label">是否避免流水帳</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('s2d',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('s2d',5,this)">5</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill olive-fill" id="story2-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Data -->
+    <div class="dimension" data-dim="data2" data-task="2">
+      <div class="dim-header">
+        <div class="dim-icon olive-icon">📊</div>
+        <div>
+          <div class="dim-name">Data</div>
+          <div class="dim-sub">數據與洞察</div>
+        </div>
+        <div class="dim-subtotal olive-color" id="data2-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="d2a" data-max="5" data-task="2">
+        <span class="criteria-label">是否找到重要 KPI</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('d2a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('d2a',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="d2b" data-max="5" data-task="2">
+        <span class="criteria-label">是否具備數據洞察</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('d2b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('d2b',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="d2c" data-max="5" data-task="2">
+        <span class="criteria-label">是否連結商業問題</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('d2c',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('d2c',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="d2d" data-max="5" data-task="2">
+        <span class="criteria-label">是否提出有效觀點</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('d2d',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('d2d',5,this)">5</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill olive-fill" id="data2-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Impact -->
+    <div class="dimension" data-dim="impact2" data-task="2">
+      <div class="dim-header">
+        <div class="dim-icon olive-icon">🎯</div>
+        <div>
+          <div class="dim-name">Impact</div>
+          <div class="dim-sub">結論與影響力</div>
+        </div>
+        <div class="dim-subtotal olive-color" id="impact2-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="i2a" data-max="5" data-task="2">
+        <span class="criteria-label">是否有清楚結論</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('i2a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('i2a',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="i2b" data-max="5" data-task="2">
+        <span class="criteria-label">是否提出行動方向</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('i2b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('i2b',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="i2c" data-max="5" data-task="2">
+        <span class="criteria-label">是否具備影響力</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('i2c',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('i2c',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="i2d" data-max="5" data-task="2">
+        <span class="criteria-label">是否讓人留下記憶點</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('i2d',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('i2d',5,this)">5</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill olive-fill" id="impact2-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <!-- Delivery -->
+    <div class="dimension" data-dim="delivery2" data-task="2">
+      <div class="dim-header">
+        <div class="dim-icon olive-icon">🎙️</div>
+        <div>
+          <div class="dim-name">Delivery</div>
+          <div class="dim-sub">表達與呈現</div>
+        </div>
+        <div class="dim-subtotal olive-color" id="delivery2-sub">0</div><span class="dim-max">/20</span>
+      </div>
+      <div class="criteria-row" data-id="del2a" data-max="5" data-task="2">
+        <span class="criteria-label">表達是否清楚穩定</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('del2a',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('del2a',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="del2b" data-max="5" data-task="2">
+        <span class="criteria-label">是否具備節奏感</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('del2b',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('del2b',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="del2c" data-max="5" data-task="2">
+        <span class="criteria-label">是否掌握時間</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('del2c',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('del2c',5,this)">5</button>
+        </div>
+      </div>
+      <div class="criteria-row" data-id="del2d" data-max="5" data-task="2">
+        <span class="criteria-label">是否具備專業感</span>
+        <div class="score-buttons">
+          <button class="btn-score active-0" onclick="setScore2('del2d',0,this)">0</button>
+          <button class="btn-score" onclick="setScore2('del2d',5,this)">5</button>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill olive-fill" id="delivery2-bar" style="width:0%"></div></div></div>
+    </div>
+
+    <div class="comment-section">
+      <label>評委備註</label>
+      <textarea id="comment2" placeholder="針對 Task 2 的補充說明或觀察..."></textarea>
+    </div>
+
+    <div class="task-footer olive-footer">
+      <span class="footer-label">TASK 2 TOTAL</span>
+      <div>
+        <span class="footer-score" id="task2-total">0</span>
+        <span class="footer-max"> / 100</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<div class="actions">
+  <button class="btn-action btn-primary" onclick="showSummary()">📋 查看完整結果</button>
+  <button class="btn-action btn-submit" onclick="submitScores()">✅ 送出結果</button>
+  <button class="btn-action btn-secondary" onclick="printPage()">🖨️ 列印 / 儲存 PDF</button>
+  <button class="btn-action btn-ghost" onclick="resetAll()">🔄 重置所有分數</button>
+</div>
+
+<!-- Summary Modal -->
+<div class="modal-overlay" id="summary-modal">
+  <div class="modal">
+    <div class="modal-header">
+      <h3>評分結果摘要</h3>
+      <button class="modal-close" onclick="closeSummary()">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="summary-info">
+        <div class="info-item"><div class="info-label">參賽者</div><div class="info-val" id="sum-contestant">—</div></div>
+        <div class="info-item"><div class="info-label">評委</div><div class="info-val" id="sum-judge">—</div></div>
+        
+        <div class="info-item"><div class="info-label">日期</div><div class="info-val" id="sum-date">—</div></div>
+      </div>
+      <div class="summary-scores">
+        <div class="score-block navy-block">
+          <h4>TASK 1　一分鐘自我介紹</h4>
+          <div class="big-score" id="sum-t1">0</div>
+          <div class="score-max">/ 100 分</div>
+        </div>
+        <div class="score-block olive-block">
+          <h4>TASK 2　二分鐘數據解讀</h4>
+          <div class="big-score" id="sum-t2">0</div>
+          <div class="score-max">/ 100 分</div>
+        </div>
+      </div>
+      <div class="dim-breakdown" id="sum-breakdown"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // score store
+  const scores = {};
+
+  // init all to 0
+  const allIds1 = ['h1a','h1b','s1a','s1b','d1a','d1b','i1a','i1b','del1a','del1b'];
+  const allIds2 = ['h2a','h2b','h2c','h2d','s2a','s2b','s2c','s2d','d2a','d2b','d2c','d2d','i2a','i2b','i2c','i2d','del2a','del2b','del2c','del2d'];
+  [...allIds1, ...allIds2].forEach(id => scores[id] = 0);
+
+  const dimMap1 = {
+    hook1: ['h1a','h1b'],
+    story1: ['s1a','s1b'],
+    data1: ['d1a','d1b'],
+    impact1: ['i1a','i1b'],
+    delivery1: ['del1a','del1b']
+  };
+  const dimMap2 = {
+    hook2: ['h2a','h2b','h2c','h2d'],
+    story2: ['s2a','s2b','s2c','s2d'],
+    data2: ['d2a','d2b','d2c','d2d'],
+    impact2: ['i2a','i2b','i2c','i2d'],
+    delivery2: ['del2a','del2b','del2c','del2d']
+  };
+
+  function setScore(id, val, btn) {
+    scores[id] = val;
+    // update button states
+    const row = btn.closest('.criteria-row');
+    row.querySelectorAll('.btn-score').forEach(b => {
+      b.className = 'btn-score';
+    });
+    if (val === 0) btn.classList.add('active-0');
+    else if (val === 5) btn.classList.add('active-5-navy');
+    else if (val === 10) btn.classList.add('active-10');
+    updateTask1();
+  }
+
+  function setScore2(id, val, btn) {
+    scores[id] = val;
+    const row = btn.closest('.criteria-row');
+    row.querySelectorAll('.btn-score').forEach(b => {
+      b.className = 'btn-score';
+    });
+    if (val === 0) btn.classList.add('active-0');
+    else btn.classList.add('active-5-only');
+    updateTask2();
+  }
+
+  function updateTask1() {
+    let total = 0;
+    for (const [dim, ids] of Object.entries(dimMap1)) {
+      const sub = ids.reduce((s, id) => s + scores[id], 0);
+      const max = ids.length * 10;
+      document.getElementById(dim + '-sub').textContent = sub;
+      document.getElementById(dim + '-bar').style.width = (sub / max * 100) + '%';
+      total += sub;
+    }
+    document.getElementById('task1-total').textContent = total;
+  }
+
+  function updateTask2() {
+    let total = 0;
+    for (const [dim, ids] of Object.entries(dimMap2)) {
+      const sub = ids.reduce((s, id) => s + scores[id], 0);
+      const max = ids.length * 5;
+      document.getElementById(dim + '-sub').textContent = sub;
+      document.getElementById(dim + '-bar').style.width = (sub / max * 100) + '%';
+      total += sub;
+    }
+    document.getElementById('task2-total').textContent = total;
+  }
+
+  function showSummary() {
+    const contestant = document.getElementById('contestant-name').value || '未填寫';
+    const judge = document.getElementById('judge-num').value;
+    const judgeNum = judge;
+    const date = document.getElementById('score-date').value || '未填寫';
+
+    document.getElementById('sum-contestant').textContent = contestant;
+    document.getElementById('sum-judge').textContent = judge;
+    
+    document.getElementById('sum-date').textContent = date;
+    document.getElementById('sum-t1').textContent = document.getElementById('task1-total').textContent;
+    document.getElementById('sum-t2').textContent = document.getElementById('task2-total').textContent;
+
+    // breakdown
+    const dimLabels = {
+      hook1: 'Hook 吸引注意力', story1: 'Story 故事與脈絡',
+      data1: 'Data 個人價值', impact1: 'Impact 影響力',
+      delivery1: 'Delivery 表達呈現',
+      hook2: 'Hook 吸引注意力', story2: 'Story 邏輯脈絡',
+      data2: 'Data 數據洞察', impact2: 'Impact 結論影響',
+      delivery2: 'Delivery 表達呈現'
+    };
+    let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0 32px;">';
+    html += '<div><h4 style="font-size:12px;color:var(--navy);font-weight:700;letter-spacing:1px;margin-bottom:8px;margin-top:12px;">TASK 1 維度分解</h4>';
+    for (const [dim, ids] of Object.entries(dimMap1)) {
+      const sub = ids.reduce((s, id) => s + scores[id], 0);
+      html += `<div class="breakdown-row"><span>${dimLabels[dim]}</span><span class="breakdown-val" style="color:var(--navy)">${sub}/20</span></div>`;
+    }
+    html += '</div><div><h4 style="font-size:12px;color:var(--olive);font-weight:700;letter-spacing:1px;margin-bottom:8px;margin-top:12px;">TASK 2 維度分解</h4>';
+    for (const [dim, ids] of Object.entries(dimMap2)) {
+      const sub = ids.reduce((s, id) => s + scores[id], 0);
+      html += `<div class="breakdown-row"><span>${dimLabels[dim]}</span><span class="breakdown-val" style="color:var(--olive)">${sub}/20</span></div>`;
+    }
+    html += '</div></div>';
+    const c1 = document.getElementById('comment1').value;
+    const c2 = document.getElementById('comment2').value;
+    if (c1) html += `<div style="margin-top:16px;padding:12px 16px;background:var(--navy-bg);border-radius:8px;font-size:13px;"><strong style="color:var(--navy)">Task 1 備註：</strong>${c1}</div>`;
+    if (c2) html += `<div style="margin-top:8px;padding:12px 16px;background:var(--green-bg);border-radius:8px;font-size:13px;"><strong style="color:var(--olive)">Task 2 備註：</strong>${c2}</div>`;
+    document.getElementById('sum-breakdown').innerHTML = html;
+    document.getElementById('summary-modal').classList.add('open');
+  }
+
+  function closeSummary() {
+    document.getElementById('summary-modal').classList.remove('open');
+  }
+
+  function resetAll() {
+    
+    [...allIds1, ...allIds2].forEach(id => scores[id] = 0);
+    document.querySelectorAll('.btn-score').forEach(btn => {
+      btn.className = 'btn-score';
+    });
+    // re-activate 0 buttons
+    document.querySelectorAll('.criteria-row').forEach(row => {
+      row.querySelectorAll('.btn-score')[0].classList.add('active-0');
+    });
+    document.querySelectorAll('textarea').forEach(t => t.value = '');
+    updateTask1(); updateTask2();
+  }
+
+  function printPage() {
+    try { window.print(); } catch(e) { alert('請使用瀏覽器的列印功能（Ctrl+P 或 Cmd+P）'); }
+  }
+
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzmdbbK39KYFRmZvUtuyO21qIOLyOJ8MDI8McT4-QXJyztKWck-WP2x0r2ZkO3uf8Wv/exec';
+
+  function dimSum(dim) {
+    const map = {
+      hook1:['h1a','h1b'], story1:['s1a','s1b'], data1:['d1a','d1b'], impact1:['i1a','i1b'], delivery1:['del1a','del1b'],
+      hook2:['h2a','h2b','h2c','h2d'], story2:['s2a','s2b','s2c','s2d'], data2:['d2a','d2b','d2c','d2d'], impact2:['i2a','i2b','i2c','i2d'], delivery2:['del2a','del2b','del2c','del2d']
+    };
+    return (map[dim] || []).reduce((s, id) => s + (scores[id] || 0), 0);
+  }
+
+  function submitScores() {
+    const contestant = document.getElementById('contestant-name').value;
+    const judge = document.getElementById('judge-num').value;
+    if (!contestant) { alert('請先填寫參賽者姓名！'); return; }
+
+    const params = new URLSearchParams({
+      contestant, judge,
+      t1_hook: dimSum('hook1'), t1_story: dimSum('story1'),
+      t1_data: dimSum('data1'), t1_impact: dimSum('impact1'),
+      t1_delivery: dimSum('delivery1'),
+      task1_total: document.getElementById('task1-total').textContent,
+      t2_hook: dimSum('hook2'), t2_story: dimSum('story2'),
+      t2_data: dimSum('data2'), t2_impact: dimSum('impact2'),
+      t2_delivery: dimSum('delivery2'),
+      task2_total: document.getElementById('task2-total').textContent,
+      comment1: document.getElementById('comment1').value,
+      comment2: document.getElementById('comment2').value
+    });
+
+    const btn = document.querySelector('.btn-submit');
+    btn.textContent = '⏳ 送出中...';
+    btn.disabled = true;
+
+    const img = new Image();
+    img.onload = img.onerror = function() {
+      btn.textContent = '✅ 已送出！';
+      btn.style.background = '#2d6a2d';
+    };
+    img.src = SHEET_URL + '?' + params.toString();
+  }
+
+  // set today's date
+  document.getElementById('score-date').value = new Date().toISOString().split('T')[0];
+
+  // close modal on overlay click
+  document.getElementById('summary-modal').addEventListener('click', function(e) {
+    if (e.target === this) closeSummary();
+  });
+</script>
+</body>
+</html>
