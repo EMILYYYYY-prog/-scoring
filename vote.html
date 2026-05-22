@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>個人賽 互評投票</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=DM+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --gold: #c9973a;
+    --gold-light: #e8b84b;
+    --olive: #4a5e2f;
+    --cream: #f8f4ec;
+    --cream-dark: #ede8dc;
+    --white: #ffffff;
+    --muted: #6b7280;
+    --red: #c0392b;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif TC', serif; background: var(--cream); min-height: 100vh; }
+
+  header {
+    background: var(--navy);
+    padding: 24px 24px 20px;
+    border-bottom: 4px solid var(--gold);
+    text-align: center;
+  }
+  header h1 { font-size: 22px; color: var(--white); letter-spacing: 2px; }
+  header p { font-size: 12px; color: var(--gold-light); margin-top: 6px; }
+
+  /* Progress */
+  .progress-bar {
+    display: flex;
+    background: var(--navy);
+    padding: 0 24px 16px;
+    gap: 8px;
+    justify-content: center;
+  }
+  .step {
+    flex: 1; max-width: 160px;
+    text-align: center;
+    padding: 8px 12px;
+    border-radius: 20px;
+    font-size: 12px; font-weight: 700;
+    transition: all 0.3s;
+  }
+  .step.active { background: var(--gold); color: var(--white); }
+  .step.done { background: var(--olive); color: var(--white); }
+  .step.pending { background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.4); }
+
+  .container { max-width: 520px; margin: 28px auto; padding: 0 20px 60px; }
+
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.08);
+    overflow: hidden;
+    margin-bottom: 16px;
+  }
+  .card-header {
+    padding: 16px 20px;
+    font-size: 15px; font-weight: 700; color: var(--white);
+  }
+  .card-header.navy { background: var(--navy); }
+  .card-header.olive { background: var(--olive); }
+  .card-body { padding: 20px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group label {
+    display: block; font-size: 12px; font-weight: 700;
+    color: var(--muted); margin-bottom: 8px; letter-spacing: 0.5px;
+  }
+  select {
+    width: 100%;
+    border: 2px solid var(--cream-dark);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: inherit; font-size: 15px;
+    color: var(--navy); background: var(--cream);
+    outline: none; transition: border-color 0.2s;
+    appearance: none;
+  }
+  select:focus { border-color: var(--gold); }
+
+  .candidates-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .candidate-btn {
+    padding: 14px 10px;
+    border-radius: 10px;
+    border: 2px solid var(--cream-dark);
+    background: var(--cream);
+    font-family: inherit; font-size: 14px; font-weight: 600;
+    color: var(--navy); cursor: pointer;
+    transition: all 0.15s; text-align: center;
+  }
+  .candidate-btn:hover:not(:disabled) { border-color: var(--gold); background: #fdf8ee; }
+  .candidate-btn.selected-navy { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .candidate-btn.selected-olive { background: var(--olive); border-color: var(--olive); color: var(--white); }
+  .candidate-btn:disabled { opacity: 0.3; cursor: not-allowed; background: #e5e7eb; border-color: #e5e7eb; color: #9ca3af; }
+  .self-label { font-size: 11px; display: block; margin-top: 2px; opacity: 0.6; }
+
+  .notice {
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; margin-bottom: 16px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+  .notice.gold { background: #fef9ee; border: 1.5px solid var(--gold); color: #92610a; }
+  .notice.olive { background: #eef3e8; border: 1.5px solid var(--olive); color: #3a4a25; }
+
+  .btn-submit {
+    width: 100%; padding: 16px;
+    color: var(--white); border: none; border-radius: 10px;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+    margin-top: 4px;
+  }
+  .btn-submit.navy-btn { background: var(--navy); }
+  .btn-submit.navy-btn:hover:not(:disabled) { background: #263354; }
+  .btn-submit.olive-btn { background: var(--olive); }
+  .btn-submit.olive-btn:hover:not(:disabled) { background: #5c7538; }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Round 2 locked state */
+  .locked-msg {
+    text-align: center; padding: 24px;
+    color: var(--muted); font-size: 14px;
+  }
+  .locked-msg .lock { font-size: 36px; margin-bottom: 10px; }
+
+  /* Success */
+  .success-screen { text-align: center; padding: 40px 24px; }
+  .success-screen .icon { font-size: 56px; margin-bottom: 12px; }
+  .success-screen h2 { font-size: 20px; color: var(--navy); margin-bottom: 8px; }
+  .success-screen p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+
+  .divider {
+    text-align: center; margin: 8px 0 16px;
+    font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 10px;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--cream-dark);
+  }
+
+  .error-msg { color: var(--red); font-size: 13px; margin-top: 8px; display: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>個人賽 互評投票</h1>
+  <p>Personal Impact Challenge — Peer Vote</p>
+</header>
+
+<div class="progress-bar">
+  <div class="step active" id="step1-indicator">① 自我介紹</div>
+  <div class="step pending" id="step2-indicator">② 數據解讀</div>
+  <div class="step pending" id="step3-indicator">✓ 完成</div>
+</div>
+
+<div class="container">
+
+  <!-- 身份選擇 -->
+  <div class="card" id="identity-card">
+    <div class="card-header navy">我是誰？</div>
+    <div class="card-body">
+      <div class="field-group">
+        <label>選擇你的名字</label>
+        <select id="voter-select" onchange="onVoterChange()">
+          <option value="">-- 請選擇 --</option>
+          <option>Tina</option><option>Emily</option><option>Emilie</option>
+          <option>Coco</option><option>Aslan</option><option>Shine</option>
+          <option>Eric</option><option>Joyce</option><option>Effie</option>
+          <option>Eve</option><option>K</option><option>Kun</option>
+          <option>Manda</option><option>Nicole</option><option>Sin</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- 第一輪：自我介紹 -->
+  <div id="round1-section" style="display:none">
+    <div class="notice gold">
+      <span>🎤</span>
+      <span><strong>第一輪｜一分鐘自我介紹</strong><br>選出除了自己以外，自我介紹最精彩的人。＋5分</span>
+    </div>
+    <div class="card">
+      <div class="card-header navy">投票給誰？</div>
+      <div class="card-body">
+        <div class="candidates-grid" id="round1-grid"></div>
+        <p class="error-msg" id="error1">請先選擇一位候選人！</p>
+      </div>
+    </div>
+    <button class="btn-submit navy-btn" id="submit1-btn" onclick="submitRound1()" disabled>送出第一輪投票</button>
+  </div>
+
+  <!-- 第一輪完成提示 -->
+  <div id="round1-done" style="display:none">
+    <div class="card">
+      <div class="card-body">
+        <div class="success-screen">
+          <div class="icon">✅</div>
+          <h2>第一輪投票完成！</h2>
+          <p id="round1-result-msg"></p>
+        </div>
+      </div>
+    </div>
+    <div class="divider">第二輪投票</div>
+  </div>
+
+  <!-- 第二輪：數據解讀 -->
+  <div id="round2-section" style="display:none">
+    <div class="notice olive">
+      <span>📊</span>
+      <span><strong>第二輪｜二分鐘數據解讀</strong><br>選出除了自己以外，數據解讀最精彩的人。＋5分</span>
+    </div>
+    <div class="card">
+      <div class="card-header olive">投票給誰？</div>
+      <div class="card-body">
+        <div class="candidates-grid" id="round2-grid"></div>
+        <p class="error-msg" id="error2">請先選擇一位候選人！</p>
+      </div>
+    </div>
+    <button class="btn-submit olive-btn" id="submit2-btn" onclick="submitRound2()" disabled>送出第二輪投票</button>
+  </div>
+
+  <!-- 全部完成 -->
+  <div id="all-done" style="display:none">
+    <div class="card">
+      <div class="card-body">
+        <div class="success-screen">
+          <div class="icon">🎉</div>
+          <h2>投票全部完成！</h2>
+          <p id="all-done-msg"></p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzmdbbK39KYFRmZvUtuyO21qIOLyOJ8MDI8McT4-QXJyztKWck-WP2x0r2ZkO3uf8Wv/exec';
+  const allNames = ['Tina','Emily','Emilie','Coco','Aslan','Shine','Eric','Joyce','Effie','Eve','K','Kun','Manda','Nicole','Sin'];
+
+  let voter = '';
+  let votee1 = null;
+  let votee2 = null;
+
+  function onVoterChange() {
+    voter = document.getElementById('voter-select').value;
+    votee1 = null; votee2 = null;
+
+    if (!voter) {
+      document.getElementById('round1-section').style.display = 'none';
+      return;
+    }
+
+    buildGrid('round1-grid', 'navy', 1);
+    document.getElementById('round1-section').style.display = 'block';
+    document.getElementById('round1-done').style.display = 'none';
+    document.getElementById('round2-section').style.display = 'none';
+    document.getElementById('all-done').style.display = 'none';
+    document.getElementById('submit1-btn').disabled = true;
+    updateSteps(1);
+  }
+
+  function buildGrid(gridId, color, round) {
+    const grid = document.getElementById(gridId);
+    grid.innerHTML = '';
+    allNames.forEach(name => {
+      const btn = document.createElement('button');
+      btn.className = 'candidate-btn';
+      btn.id = gridId + '-' + name;
+      if (name === voter) {
+        btn.disabled = true;
+        btn.innerHTML = name + '<span class="self-label">（自己）</span>';
+      } else {
+        btn.textContent = name;
+        btn.onclick = () => selectCandidate(gridId, name, color, round);
+      }
+      grid.appendChild(btn);
+    });
+  }
+
+  function selectCandidate(gridId, name, color, round) {
+    document.querySelectorAll('#' + gridId + ' .candidate-btn').forEach(b => {
+      b.classList.remove('selected-navy', 'selected-olive');
+    });
+    document.getElementById(gridId + '-' + name).classList.add('selected-' + color);
+    if (round === 1) {
+      votee1 = name;
+      document.getElementById('submit1-btn').disabled = false;
+      document.getElementById('error1').style.display = 'none';
+    } else {
+      votee2 = name;
+      document.getElementById('submit2-btn').disabled = false;
+      document.getElementById('error2').style.display = 'none';
+    }
+  }
+
+  function sendVote(round, votee, callback) {
+    const params = new URLSearchParams({
+      type: 'peer_vote',
+      voter, votee,
+      round: round === 1 ? '自我介紹' : '數據解讀',
+      points: 5
+    });
+    const img = new Image();
+    img.onload = img.onerror = callback;
+    img.src = SHEET_URL + '?' + params.toString();
+  }
+
+  function submitRound1() {
+    if (!votee1) { document.getElementById('error1').style.display = 'block'; return; }
+    const btn = document.getElementById('submit1-btn');
+    btn.textContent = '⏳ 送出中...'; btn.disabled = true;
+    document.getElementById('voter-select').disabled = true;
+
+    sendVote(1, votee1, function() {
+      document.getElementById('round1-section').style.display = 'none';
+      document.getElementById('round1-result-msg').textContent =
+        voter + ' 在「自我介紹」投給了 ' + votee1 + ' ＋5分';
+      document.getElementById('round1-done').style.display = 'block';
+      buildGrid('round2-grid', 'olive', 2);
+      document.getElementById('round2-section').style.display = 'block';
+      document.getElementById('submit2-btn').disabled = true;
+      updateSteps(2);
+      window.scrollTo({ top: document.getElementById('round1-done').offsetTop - 20, behavior: 'smooth' });
+    });
+  }
+
+  function submitRound2() {
+    if (!votee2) { document.getElementById('error2').style.display = 'block'; return; }
+    const btn = document.getElementById('submit2-btn');
+    btn.textContent = '⏳ 送出中...'; btn.disabled = true;
+
+    sendVote(2, votee2, function() {
+      document.getElementById('round2-section').style.display = 'none';
+      document.getElementById('all-done-msg').textContent =
+        voter + ' 在「數據解讀」投給了 ' + votee2 + ' ＋5分\n感謝你的參與！';
+      document.getElementById('all-done').style.display = 'block';
+      updateSteps(3);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
+  }
+
+  function updateSteps(active) {
+    const steps = ['step1-indicator','step2-indicator','step3-indicator'];
+    steps.forEach((id, i) => {
+      const el = document.getElementById(id);
+      el.className = 'step';
+      if (i + 1 < active) el.classList.add('done');
+      else if (i + 1 === active) el.classList.add('active');
+      else el.classList.add('pending');
+    });
+  }
+</script>
+</body>
+</html>
