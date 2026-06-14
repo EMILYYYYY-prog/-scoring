@@ -479,7 +479,7 @@
 </div>
 
 <script>
-  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwjsCUTjaKuoqIzG_INMZx06B2NXdJ55lWEzvncly9oA_SIpwfYKAETO48OjsJL5fExlg/exec;
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbwjsCUTjaKuoqIzG_INMZx06B2NXdJ55lWEzvncly9oA_SIpwfYKAETO48OjsJL5fExlg/exec';
 
   // Score stores
   const sc1 = {t1h1:0,t1h2:0,t1s1:0,t1s2:0,t1d1:0,t1d2:0,t1i1:0,t1i2:0,t1del1:0,t1del2:0};
@@ -564,11 +564,16 @@
   function sendData(params, btnId, successText) {
     const btn = document.getElementById(btnId);
     btn.textContent = '⏳ 送出中...'; btn.disabled = true;
-    const img = new Image();
-    img.onload = img.onerror = function() {
-      btn.textContent = successText; btn.style.background = '#2d6a2d';
-    };
-    img.src = SHEET_URL + '?' + new URLSearchParams(params).toString();
+    const url = SHEET_URL + '?' + new URLSearchParams(params).toString();
+    console.log('Sending to:', url);
+    fetch(url, { method: 'GET', mode: 'no-cors' })
+      .then(() => {
+        btn.textContent = successText; btn.style.background = '#2d6a2d';
+      })
+      .catch(err => {
+        console.error('Error:', err);
+        btn.textContent = '❌ 送出失敗'; btn.style.background = '#c0392b'; btn.disabled = false;
+      });
   }
 
   function submitTask1() {
