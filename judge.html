@@ -577,7 +577,7 @@
     if (!contestant) { alert('請選擇參賽者！'); return; }
     if (!judge) { alert('請選擇評審！'); return; }
     sendData({
-      contestant, judge,
+      type: 'individual_score', contestant, judge,
       t1_hook: dim1.hook.reduce((s,id)=>s+sc1[id],0),
       t1_story: dim1.story.reduce((s,id)=>s+sc1[id],0),
       t1_data: dim1.data.reduce((s,id)=>s+sc1[id],0),
@@ -595,7 +595,7 @@
     if (!contestant) { alert('請選擇參賽者！'); return; }
     if (!judge) { alert('請選擇評審！'); return; }
     sendData({
-      contestant, judge,
+      type: 'individual_score', contestant, judge,
       t1_hook:0, t1_story:0, t1_data:0, t1_impact:0, t1_delivery:0, task1_total:0,
       t2_hook: dim2.hook.reduce((s,id)=>s+sc2[id],0),
       t2_story: dim2.story.reduce((s,id)=>s+sc2[id],0),
