@@ -624,7 +624,10 @@
       bonus: dimt.bonus.reduce((s,id)=>s+sct[id],0),
       team_collab: dimt.team.reduce((s,id)=>s+sct[id],0),
       total: document.getElementById('tm-total').textContent,
-      ...Object.fromEntries(Object.keys(sct).map(k=>[k,sct[k]])),
+      i1:sct.tmi1,i2:sct.tmi2,i3:sct.tmi3,i4:sct.tmi4,i5:sct.tmi5,
+      h1:sct.tmh1,h2:sct.tmh2,h3:sct.tmh3,h4:sct.tmh4,h5:sct.tmh5,
+      b1:sct.tmb1,b2:sct.tmb2,b3:sct.tmb3,b4:sct.tmb4,b5:sct.tmb5,
+      t1:sct.tmt1,t2:sct.tmt2,t3:sct.tmt3,t4:sct.tmt4,t5:sct.tmt5,
       comment: document.getElementById('comment-team').value
     }, 'submit-team', '✅ 團體評分已送出！');
   }
