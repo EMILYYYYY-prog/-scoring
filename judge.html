@@ -1,0 +1,657 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>評審評分系統</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --navy-mid: #263354;
+    --gold: #c9973a;
+    --gold-light: #e8b84b;
+    --olive: #4a5e2f;
+    --olive-light: #6b8540;
+    --blue: #1a4474;
+    --orange: #c45c0a;
+    --purple: #5b2d8e;
+    --cream: #f8f4ec;
+    --cream-dark: #ede8dc;
+    --white: #ffffff;
+    --muted: #6b7280;
+    --sidebar-w: 200px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif TC', serif; background: var(--cream); min-height: 100vh; display: flex; flex-direction: column; }
+
+  /* ── Header ── */
+  header {
+    background: var(--navy); padding: 16px 24px;
+    border-bottom: 3px solid var(--gold);
+    display: flex; align-items: center; gap: 14px;
+    position: sticky; top: 0; z-index: 50;
+  }
+  header h1 { font-size: 18px; color: var(--white); letter-spacing: 1px; }
+  header p { font-size: 11px; color: var(--gold-light); margin-top: 2px; }
+  .header-icon { font-size: 28px; }
+
+  /* ── Setup bar ── */
+  .setup-bar {
+    background: var(--white); border-bottom: 1px solid var(--cream-dark);
+    padding: 12px 24px; display: flex; gap: 16px; align-items: flex-end; flex-wrap: wrap;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 4px; }
+  .field-group label { font-size: 11px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; }
+  select, input[type="text"], input[type="date"] {
+    border: 2px solid var(--cream-dark); border-radius: 6px;
+    padding: 8px 12px; font-family: inherit; font-size: 13px;
+    color: var(--navy); background: var(--cream);
+    outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--gold); }
+
+  /* ── Layout ── */
+  .layout { display: flex; flex: 1; }
+
+  /* ── Sidebar ── */
+  .sidebar {
+    width: var(--sidebar-w); flex-shrink: 0;
+    background: var(--navy);
+    padding: 20px 0;
+    position: sticky; top: 97px;
+    height: calc(100vh - 97px);
+    overflow-y: auto;
+  }
+  .sidebar-label {
+    font-size: 10px; font-weight: 700; color: rgba(255,255,255,0.4);
+    letter-spacing: 1.5px; padding: 0 16px 10px;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 14px 16px; cursor: pointer;
+    color: rgba(255,255,255,0.55); font-size: 13px; font-weight: 600;
+    border-left: 3px solid transparent;
+    transition: all 0.15s;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.07); color: rgba(255,255,255,0.9); }
+  .nav-item.active { background: rgba(255,255,255,0.1); color: var(--white); border-left-color: var(--gold); }
+  .nav-icon { font-size: 18px; flex-shrink: 0; }
+  .nav-text { line-height: 1.3; }
+  .nav-sub { font-size: 10px; opacity: 0.6; display: block; margin-top: 2px; }
+  .nav-divider { height: 1px; background: rgba(255,255,255,0.1); margin: 8px 16px; }
+
+  /* ── Content ── */
+  .content { flex: 1; padding: 24px; overflow-x: hidden; }
+  .section { display: none; }
+  .section.active { display: block; }
+
+  /* ── Section header ── */
+  .section-header {
+    display: flex; align-items: center; gap: 14px;
+    padding: 18px 22px; border-radius: 12px 12px 0 0;
+    margin-bottom: 0; color: var(--white);
+  }
+  .sh-navy { background: var(--navy); }
+  .sh-olive { background: var(--olive); }
+  .sh-gold { background: var(--blue); }
+  .section-header h2 { font-size: 18px; font-weight: 700; }
+  .section-header p { font-size: 11px; opacity: 0.75; margin-top: 3px; }
+  .sh-badge { margin-left: auto; background: rgba(255,255,255,0.2); font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px; white-space: nowrap; }
+
+  /* ── Score legend ── */
+  .score-legend {
+    display: flex; gap: 12px; align-items: center;
+    padding: 10px 22px; background: var(--cream);
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 12px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-dot { width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 700; color: var(--white); }
+  .dot-0 { background: #cbd5e1; color: #475569; }
+  .dot-mid { background: var(--gold); }
+  .dot-top { background: var(--navy); }
+
+  /* ── Task card ── */
+  .task-card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(26,39,68,0.08); margin-bottom: 20px; }
+
+  /* ── Dimension ── */
+  .dimension { border-bottom: 1px solid var(--cream-dark); }
+  .dimension:last-of-type { border-bottom: none; }
+  .dim-header { display: flex; align-items: center; gap: 10px; padding: 12px 20px 8px; background: var(--cream); }
+  .dim-icon { font-size: 18px; }
+  .dim-name { font-size: 14px; font-weight: 700; }
+  .dim-sub { font-size: 11px; color: var(--muted); }
+  .dim-subtotal { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 16px; font-weight: 700; }
+
+  /* Criteria */
+  .criteria-row { display: flex; align-items: center; gap: 10px; padding: 9px 20px; border-bottom: 1px solid var(--cream-dark); }
+  .criteria-row:last-of-type { border-bottom: none; }
+  .criteria-row:hover { background: var(--cream); }
+  .criteria-label { flex: 1; font-size: 13px; color: var(--navy); }
+  .score-btns { display: flex; gap: 5px; flex-shrink: 0; }
+  .btn-score {
+    width: 36px; height: 36px; border-radius: 50%;
+    border: 2px solid var(--cream-dark); background: var(--white);
+    font-family: 'DM Mono', monospace; font-size: 12px; font-weight: 600;
+    cursor: pointer; color: var(--muted); transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-score:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-score.sel-0 { background: #cbd5e1; border-color: #94a3b8; color: #475569; }
+  .btn-score.sel-mid-navy { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.sel-top-navy { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .btn-score.sel-mid-olive { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.sel-top-olive { background: var(--olive); border-color: var(--olive); color: var(--white); }
+  .btn-score.sel-3 { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.sel-5-blue { background: var(--blue); border-color: var(--blue); color: var(--white); }
+  .btn-score.sel-5-green { background: var(--olive); border-color: var(--olive); color: var(--white); }
+  .btn-score.sel-5-orange { background: var(--orange); border-color: var(--orange); color: var(--white); }
+  .btn-score.sel-5-purple { background: var(--purple); border-color: var(--purple); color: var(--white); }
+
+  /* Progress */
+  .progress-wrap { padding: 6px 20px 10px; background: var(--cream); }
+  .progress-track { height: 5px; border-radius: 3px; background: var(--cream-dark); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .fill-navy { background: var(--navy); }
+  .fill-olive { background: var(--olive); }
+  .fill-blue { background: var(--blue); }
+  .fill-green { background: var(--olive); }
+  .fill-orange { background: var(--orange); }
+  .fill-purple { background: var(--purple); }
+
+  /* Footer total */
+  .task-footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 22px; }
+  .tf-navy { background: var(--navy); }
+  .tf-olive { background: var(--olive); }
+  .tf-blue { background: var(--blue); }
+  .footer-label { font-size: 13px; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 2px; }
+  .footer-score { font-family: 'DM Mono', monospace; font-size: 34px; font-weight: 700; color: var(--white); }
+  .footer-max { font-size: 14px; color: rgba(255,255,255,0.4); }
+
+  /* Team dim cards */
+  .team-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  @media (max-width: 800px) { .team-grid { grid-template-columns: 1fr; } }
+  .dim-card { background: var(--white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 12px rgba(26,39,68,0.08); }
+  .dim-card-header { padding: 14px 18px; display: flex; align-items: center; gap: 10px; color: var(--white); }
+  .dch-blue { background: var(--blue); }
+  .dch-green { background: var(--olive); }
+  .dch-orange { background: var(--orange); }
+  .dch-purple { background: var(--purple); }
+  .dim-card-header h3 { font-size: 14px; font-weight: 700; }
+  .dim-card-header p { font-size: 10px; opacity: 0.75; }
+  .dim-card-max { margin-left: auto; font-family: 'DM Mono', monospace; font-size: 13px; opacity: 0.8; }
+
+  /* Comment */
+  .comment-section { padding: 14px 20px; border-top: 1px solid var(--cream-dark); }
+  .comment-section label { font-size: 11px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 6px; }
+  .comment-section textarea { width: 100%; border: 2px solid var(--cream-dark); border-radius: 8px; padding: 9px 12px; font-family: inherit; font-size: 13px; color: var(--navy); background: var(--cream); resize: vertical; min-height: 64px; outline: none; transition: border-color 0.2s; }
+  .comment-section textarea:focus { border-color: var(--gold); }
+
+  /* Submit button */
+  .submit-wrap { padding: 0 0 32px; }
+  .btn-submit { width: 100%; padding: 15px; border: none; border-radius: 10px; font-family: inherit; font-size: 15px; font-weight: 700; cursor: pointer; letter-spacing: 0.5px; transition: all 0.2s; display: flex; align-items: center; justify-content: center; gap: 8px; }
+  .btn-submit.navy { background: var(--navy); color: var(--white); }
+  .btn-submit.olive { background: var(--olive); color: var(--white); }
+  .btn-submit.blue { background: var(--blue); color: var(--white); }
+  .btn-submit:hover { opacity: 0.9; transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+  .btn-reset { background: none; border: 2px solid var(--cream-dark); border-radius: 8px; padding: 10px 20px; font-family: inherit; font-size: 13px; color: var(--muted); cursor: pointer; margin-top: 10px; width: 100%; transition: all 0.2s; }
+  .btn-reset:hover { border-color: var(--gold); color: var(--gold); }
+
+  @media (max-width: 650px) {
+    .sidebar { width: 56px; }
+    .nav-text, .sidebar-label, .nav-divider { display: none; }
+    .nav-item { justify-content: center; padding: 14px 0; }
+    .content { padding: 16px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">⭐</div>
+  <div>
+    <h1>評審評分系統</h1>
+    <p>Personal Impact Challenge & Business Impact Challenge</p>
+  </div>
+</header>
+
+<div class="setup-bar">
+  <div class="field-group">
+    <label>評審</label>
+    <select id="judge-select" style="width:110px;" onchange="onJudgeChange()">
+      <option value="">-- 請選擇 --</option>
+      <option>Nina</option>
+      <option>Allen</option>
+      <option value="other">其他</option>
+    </select>
+  </div>
+  <div class="field-group" id="other-wrap" style="display:none">
+    <label>姓名</label>
+    <input type="text" id="other-input" placeholder="請輸入" style="width:110px;">
+  </div>
+  <div class="field-group">
+    <label>日期</label>
+    <input type="date" id="score-date" style="width:145px;">
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Sidebar -->
+  <nav class="sidebar">
+    <div class="sidebar-label">個人賽</div>
+    <div class="nav-item active" onclick="showSection('task1')" id="nav-task1">
+      <span class="nav-icon">🎤</span>
+      <div class="nav-text">Task 1<span class="nav-sub">自我介紹</span></div>
+    </div>
+    <div class="nav-item" onclick="showSection('task2')" id="nav-task2">
+      <span class="nav-icon">📊</span>
+      <div class="nav-text">Task 2<span class="nav-sub">數據解讀</span></div>
+    </div>
+    <div class="nav-divider"></div>
+    <div class="sidebar-label">團體賽</div>
+    <div class="nav-item" onclick="showSection('team')" id="nav-team">
+      <span class="nav-icon">🏆</span>
+      <div class="nav-text">團體評分<span class="nav-sub">Business Impact</span></div>
+    </div>
+  </nav>
+
+  <!-- Content -->
+  <div class="content">
+
+    <!-- ══ TASK 1 ══ -->
+    <div class="section active" id="section-task1">
+      <div class="task-card">
+        <div class="section-header sh-navy">
+          <span style="font-size:22px">🎤</span>
+          <div><h2>一分鐘自我介紹</h2><p>評分方式：0 = 未展現　5 = 普通　10 = 卓越</p></div>
+          <span class="sh-badge">Task 1 · 1分鐘</span>
+        </div>
+        <div class="score-legend">
+          <span class="legend-item"><span class="legend-dot dot-0">0</span>未展現</span>
+          <span class="legend-item"><span class="legend-dot dot-mid">5</span>普通</span>
+          <span class="legend-item"><span class="legend-dot dot-top">10</span>卓越</span>
+          <span style="margin-left:auto;font-size:12px">參賽者：</span>
+          <select id="contestant1" style="font-size:12px;padding:4px 8px;width:120px">
+            <option value="">-- 請選擇 --</option>
+            <option>Tina</option><option>Emily</option><option>Emilie</option>
+            <option>Coco</option><option>Aslan</option><option>Shine</option>
+            <option>Eric</option><option>Joyce</option><option>Effie</option>
+            <option>Eve</option><option>K</option><option>Kun</option>
+            <option>Manda</option><option>Nicole</option><option>Sin</option>
+          </select>
+        </div>
+
+        <!-- Hook -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🧲</span><div><div class="dim-name">Hook</div><div class="dim-sub">吸引注意力</div></div><span class="dim-subtotal" style="color:var(--navy)" id="t1-hook-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否快速抓住注意力</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1h1',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1h1',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1h1',10,this,'navy')">10</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備記憶點</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1h2',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1h2',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1h2',10,this,'navy')">10</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-navy" id="t1-hook-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Story -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">📖</span><div><div class="dim-name">Story</div><div class="dim-sub">故事與脈絡</div></div><span class="dim-subtotal" style="color:var(--navy)" id="t1-story-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備故事感</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1s1',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1s1',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1s1',10,this,'navy')">10</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否有清楚脈絡</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1s2',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1s2',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1s2',10,this,'navy')">10</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-navy" id="t1-story-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Data -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">📊</span><div><div class="dim-name">Data</div><div class="dim-sub">個人價值與特色</div></div><span class="dim-subtotal" style="color:var(--navy)" id="t1-data-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否展現個人價值</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1d1',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1d1',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1d1',10,this,'navy')">10</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備個人特色</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1d2',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1d2',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1d2',10,this,'navy')">10</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-navy" id="t1-data-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Impact -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🎯</span><div><div class="dim-name">Impact</div><div class="dim-sub">影響力與印象</div></div><span class="dim-subtotal" style="color:var(--navy)" id="t1-impact-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否讓人留下印象</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1i1',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1i1',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1i1',10,this,'navy')">10</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備影響力／感染力</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1i2',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1i2',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1i2',10,this,'navy')">10</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-navy" id="t1-impact-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Delivery -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🎙️</span><div><div class="dim-name">Delivery</div><div class="dim-sub">表達與呈現</div></div><span class="dim-subtotal" style="color:var(--navy)" id="t1-delivery-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">表達是否清楚自然</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1del1',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1del1',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1del1',10,this,'navy')">10</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備節奏與穩定度</span><div class="score-btns"><button class="btn-score sel-0" onclick="s1('t1del2',0,this,'navy')">0</button><button class="btn-score" onclick="s1('t1del2',5,this,'navy')">5</button><button class="btn-score" onclick="s1('t1del2',10,this,'navy')">10</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-navy" id="t1-delivery-bar" style="width:0%"></div></div></div>
+        </div>
+        <div class="comment-section"><label>備註</label><textarea id="comment1" placeholder="針對 Task 1 的補充說明..."></textarea></div>
+        <div class="task-footer tf-navy"><span class="footer-label">TASK 1 TOTAL</span><div><span class="footer-score" id="t1-total">0</span><span class="footer-max"> / 100</span></div></div>
+      </div>
+      <div class="submit-wrap">
+        <button class="btn-submit navy" id="submit1" onclick="submitTask1()">✅ 送出 Task 1 評分</button>
+        <button class="btn-reset" onclick="resetTask1()">🔄 重置</button>
+      </div>
+    </div>
+
+    <!-- ══ TASK 2 ══ -->
+    <div class="section" id="section-task2">
+      <div class="task-card">
+        <div class="section-header sh-olive">
+          <span style="font-size:22px">📊</span>
+          <div><h2>二分鐘數據解讀</h2><p>評分方式：每項最高 5 分　0 = 未展現　5 = 完全展現</p></div>
+          <span class="sh-badge">Task 2 · 2分鐘</span>
+        </div>
+        <div class="score-legend">
+          <span class="legend-item"><span class="legend-dot dot-0">0</span>未展現</span>
+          <span class="legend-item"><span class="legend-dot dot-top" style="background:var(--olive)">5</span>完全展現</span>
+          <span style="margin-left:auto;font-size:12px">參賽者：</span>
+          <select id="contestant2" style="font-size:12px;padding:4px 8px;width:120px">
+            <option value="">-- 請選擇 --</option>
+            <option>Tina</option><option>Emily</option><option>Emilie</option>
+            <option>Coco</option><option>Aslan</option><option>Shine</option>
+            <option>Eric</option><option>Joyce</option><option>Effie</option>
+            <option>Eve</option><option>K</option><option>Kun</option>
+            <option>Manda</option><option>Nicole</option><option>Sin</option>
+          </select>
+        </div>
+        <!-- Hook -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🧲</span><div><div class="dim-name">Hook</div><div class="dim-sub">吸引注意力</div></div><span class="dim-subtotal" style="color:var(--olive)" id="t2-hook-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否快速抓住重點</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2h1',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2h1',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否有明確核心觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2h2',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2h2',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否吸引聽眾注意力</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2h3',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2h3',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否符合報告情境</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2h4',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2h4',5,this,'olive')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-olive" id="t2-hook-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Story -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">📖</span><div><div class="dim-name">Story</div><div class="dim-sub">邏輯與脈絡</div></div><span class="dim-subtotal" style="color:var(--olive)" id="t2-story-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備邏輯與脈絡</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2s1',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2s1',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否能解釋背後原因</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2s2',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2s2',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否能串連數據故事</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2s3',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2s3',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否避免流水帳</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2s4',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2s4',5,this,'olive')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-olive" id="t2-story-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Data -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">📊</span><div><div class="dim-name">Data</div><div class="dim-sub">數據與洞察</div></div><span class="dim-subtotal" style="color:var(--olive)" id="t2-data-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否找到重要 KPI</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2d1',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2d1',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備數據洞察</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2d2',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2d2',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否連結商業問題</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2d3',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2d3',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否提出有效觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2d4',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2d4',5,this,'olive')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-olive" id="t2-data-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Impact -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🎯</span><div><div class="dim-name">Impact</div><div class="dim-sub">結論與影響力</div></div><span class="dim-subtotal" style="color:var(--olive)" id="t2-impact-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">是否有清楚結論</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2i1',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2i1',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否提出行動方向</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2i2',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2i2',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備影響力</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2i3',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2i3',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否讓人留下記憶點</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2i4',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2i4',5,this,'olive')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-olive" id="t2-impact-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Delivery -->
+        <div class="dimension">
+          <div class="dim-header"><span class="dim-icon">🎙️</span><div><div class="dim-name">Delivery</div><div class="dim-sub">表達與呈現</div></div><span class="dim-subtotal" style="color:var(--olive)" id="t2-delivery-sub">0</span><span style="font-size:11px;color:var(--muted)">/20</span></div>
+          <div class="criteria-row"><span class="criteria-label">表達是否清楚穩定</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2del1',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2del1',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備節奏感</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2del2',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2del2',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否掌握時間</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2del3',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2del3',5,this,'olive')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-label">是否具備專業感</span><div class="score-btns"><button class="btn-score sel-0" onclick="s2('t2del4',0,this,'olive')">0</button><button class="btn-score" onclick="s2('t2del4',5,this,'olive')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-olive" id="t2-delivery-bar" style="width:0%"></div></div></div>
+        </div>
+        <div class="comment-section"><label>備註</label><textarea id="comment2" placeholder="針對 Task 2 的補充說明..."></textarea></div>
+        <div class="task-footer tf-olive"><span class="footer-label">TASK 2 TOTAL</span><div><span class="footer-score" id="t2-total">0</span><span class="footer-max"> / 100</span></div></div>
+      </div>
+      <div class="submit-wrap">
+        <button class="btn-submit olive" id="submit2" onclick="submitTask2()">✅ 送出 Task 2 評分</button>
+        <button class="btn-reset" onclick="resetTask2()">🔄 重置</button>
+      </div>
+    </div>
+
+    <!-- ══ TEAM ══ -->
+    <div class="section" id="section-team">
+      <div class="task-card" style="margin-bottom:20px">
+        <div class="section-header sh-gold">
+          <span style="font-size:22px">🏆</span>
+          <div><h2>團體賽評分</h2><p>Business Impact Challenge · 評分方式：0 / 3 / 5 制</p></div>
+          <span class="sh-badge">各維度 25分</span>
+        </div>
+        <div class="score-legend">
+          <span class="legend-item"><span class="legend-dot dot-0">0</span>未達標準</span>
+          <span class="legend-item"><span class="legend-dot dot-mid">3</span>有但不完整</span>
+          <span class="legend-item"><span class="legend-dot dot-top">5</span>明確有影響力</span>
+          <span style="margin-left:auto;font-size:12px">隊伍：</span>
+          <select id="team-select" style="font-size:12px;padding:4px 8px;width:110px">
+            <option value="">-- 請選擇 --</option>
+            <option>Team A</option><option>Team B</option><option>Team C</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="team-grid">
+        <!-- 關鍵洞察 -->
+        <div class="dim-card">
+          <div class="dim-card-header dch-blue"><span style="font-size:20px">🔍</span><div><h3>關鍵洞察</h3><p>Key Insight</p></div><span class="dim-card-max"><span id="tm-insight-sub">0</span>/25</span></div>
+          <div class="criteria-row"><span class="criteria-num-sm">1</span><span class="criteria-label">是否找到真正問題核心</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmi1',0,this,'5-blue')">0</button><button class="btn-score" onclick="st('tmi1',3,this,'3')">3</button><button class="btn-score" onclick="st('tmi1',5,this,'5-blue')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">2</span><span class="criteria-label">是否有明確機會點</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmi2',0,this,'5-blue')">0</button><button class="btn-score" onclick="st('tmi2',3,this,'3')">3</button><button class="btn-score" onclick="st('tmi2',5,this,'5-blue')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">3</span><span class="criteria-label">是否有邏輯推導</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmi3',0,this,'5-blue')">0</button><button class="btn-score" onclick="st('tmi3',3,this,'3')">3</button><button class="btn-score" onclick="st('tmi3',5,this,'5-blue')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">4</span><span class="criteria-label">洞察是否具深度</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmi4',0,this,'5-blue')">0</button><button class="btn-score" onclick="st('tmi4',3,this,'3')">3</button><button class="btn-score" onclick="st('tmi4',5,this,'5-blue')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">5</span><span class="criteria-label">觀點是否具商業影響力</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmi5',0,this,'5-blue')">0</button><button class="btn-score" onclick="st('tmi5',3,this,'3')">3</button><button class="btn-score" onclick="st('tmi5',5,this,'5-blue')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-blue" id="tm-insight-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- HSDI -->
+        <div class="dim-card">
+          <div class="dim-card-header dch-green"><span style="font-size:20px">🎙️</span><div><h3>運用 HSDI 模型</h3><p>Hook · Story · Data · Impact</p></div><span class="dim-card-max"><span id="tm-hsdi-sub">0</span>/25</span></div>
+          <div class="criteria-row"><span class="criteria-num-sm">1</span><span class="criteria-label">Hook 是否清楚吸引</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmh1',0,this,'5-green')">0</button><button class="btn-score" onclick="st('tmh1',3,this,'3')">3</button><button class="btn-score" onclick="st('tmh1',5,this,'5-green')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">2</span><span class="criteria-label">Story 是否有完整脈絡</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmh2',0,this,'5-green')">0</button><button class="btn-score" onclick="st('tmh2',3,this,'3')">3</button><button class="btn-score" onclick="st('tmh2',5,this,'5-green')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">3</span><span class="criteria-label">Data 是否有效支撐觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmh3',0,this,'5-green')">0</button><button class="btn-score" onclick="st('tmh3',3,this,'3')">3</button><button class="btn-score" onclick="st('tmh3',5,this,'5-green')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">4</span><span class="criteria-label">Impact 是否明確有力</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmh4',0,this,'5-green')">0</button><button class="btn-score" onclick="st('tmh4',3,this,'3')">3</button><button class="btn-score" onclick="st('tmh4',5,this,'5-green')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">5</span><span class="criteria-label">整體頁面串聯是否流暢</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmh5',0,this,'5-green')">0</button><button class="btn-score" onclick="st('tmh5',3,this,'3')">3</button><button class="btn-score" onclick="st('tmh5',5,this,'5-green')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-green" id="tm-hsdi-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Bonus -->
+        <div class="dim-card">
+          <div class="dim-card-header dch-orange"><span style="font-size:20px">⭐</span><div><h3>報告加分技巧</h3><p>Bonus Techniques</p></div><span class="dim-card-max"><span id="tm-bonus-sub">0</span>/25</span></div>
+          <div class="criteria-row"><span class="criteria-num-sm">1</span><span class="criteria-label">內容重點是否聚焦</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmb1',0,this,'5-orange')">0</button><button class="btn-score" onclick="st('tmb1',3,this,'3')">3</button><button class="btn-score" onclick="st('tmb1',5,this,'5-orange')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">2</span><span class="criteria-label">是否有記憶點／金句</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmb2',0,this,'5-orange')">0</button><button class="btn-score" onclick="st('tmb2',3,this,'3')">3</button><button class="btn-score" onclick="st('tmb2',5,this,'5-orange')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">3</span><span class="criteria-label">是否有效運用資訊支持觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmb3',0,this,'5-orange')">0</button><button class="btn-score" onclick="st('tmb3',3,this,'3')">3</button><button class="btn-score" onclick="st('tmb3',5,this,'5-orange')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">4</span><span class="criteria-label">表達是否有節奏感</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmb4',0,this,'5-orange')">0</button><button class="btn-score" onclick="st('tmb4',3,this,'3')">3</button><button class="btn-score" onclick="st('tmb4',5,this,'5-orange')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">5</span><span class="criteria-label">整體專業度與完成度</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmb5',0,this,'5-orange')">0</button><button class="btn-score" onclick="st('tmb5',3,this,'3')">3</button><button class="btn-score" onclick="st('tmb5',5,this,'5-orange')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-orange" id="tm-bonus-bar" style="width:0%"></div></div></div>
+        </div>
+        <!-- Team -->
+        <div class="dim-card">
+          <div class="dim-card-header dch-purple"><span style="font-size:20px">🤝</span><div><h3>團隊合作</h3><p>Team Collaboration</p></div><span class="dim-card-max"><span id="tm-team-sub">0</span>/25</span></div>
+          <div class="criteria-row"><span class="criteria-num-sm">1</span><span class="criteria-label">團隊分工是否平均</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmt1',0,this,'5-purple')">0</button><button class="btn-score" onclick="st('tmt1',3,this,'3')">3</button><button class="btn-score" onclick="st('tmt1',5,this,'5-purple')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">2</span><span class="criteria-label">每位成員是否參與</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmt2',0,this,'5-purple')">0</button><button class="btn-score" onclick="st('tmt2',3,this,'3')">3</button><button class="btn-score" onclick="st('tmt2',5,this,'5-purple')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">3</span><span class="criteria-label">團隊默契與銜接</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmt3',0,this,'5-purple')">0</button><button class="btn-score" onclick="st('tmt3',3,this,'3')">3</button><button class="btn-score" onclick="st('tmt3',5,this,'5-purple')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">4</span><span class="criteria-label">時間掌控是否良好</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmt4',0,this,'5-purple')">0</button><button class="btn-score" onclick="st('tmt4',3,this,'3')">3</button><button class="btn-score" onclick="st('tmt4',5,this,'5-purple')">5</button></div></div>
+          <div class="criteria-row"><span class="criteria-num-sm">5</span><span class="criteria-label">團隊整體呈現感</span><div class="score-btns"><button class="btn-score sel-0" onclick="st('tmt5',0,this,'5-purple')">0</button><button class="btn-score" onclick="st('tmt5',3,this,'3')">3</button><button class="btn-score" onclick="st('tmt5',5,this,'5-purple')">5</button></div></div>
+          <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-purple" id="tm-team-bar" style="width:0%"></div></div></div>
+        </div>
+      </div>
+
+      <div class="task-card">
+        <div class="comment-section"><label>備註</label><textarea id="comment-team" placeholder="針對本隊表現的補充說明..."></textarea></div>
+        <div class="task-footer tf-blue"><span class="footer-label">TEAM TOTAL</span><div><span class="footer-score" id="tm-total">0</span><span class="footer-max"> / 100</span></div></div>
+      </div>
+      <div class="submit-wrap">
+        <button class="btn-submit blue" id="submit-team" onclick="submitTeam()">✅ 送出團體評分</button>
+        <button class="btn-reset" onclick="resetTeam()">🔄 重置</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbziQMpDJHaaF3U2pTqTMY4LhvU55MwSzyE4zV4MO7qTB2LoQjjCfsxRoez9GzLPUzxmdQ/exec';
+
+  // Score stores
+  const sc1 = {t1h1:0,t1h2:0,t1s1:0,t1s2:0,t1d1:0,t1d2:0,t1i1:0,t1i2:0,t1del1:0,t1del2:0};
+  const sc2 = {t2h1:0,t2h2:0,t2h3:0,t2h4:0,t2s1:0,t2s2:0,t2s3:0,t2s4:0,t2d1:0,t2d2:0,t2d3:0,t2d4:0,t2i1:0,t2i2:0,t2i3:0,t2i4:0,t2del1:0,t2del2:0,t2del3:0,t2del4:0};
+  const sct = {tmi1:0,tmi2:0,tmi3:0,tmi4:0,tmi5:0,tmh1:0,tmh2:0,tmh3:0,tmh4:0,tmh5:0,tmb1:0,tmb2:0,tmb3:0,tmb4:0,tmb5:0,tmt1:0,tmt2:0,tmt3:0,tmt4:0,tmt5:0};
+
+  const dim1 = {hook:['t1h1','t1h2'],story:['t1s1','t1s2'],data:['t1d1','t1d2'],impact:['t1i1','t1i2'],delivery:['t1del1','t1del2']};
+  const dim2 = {hook:['t2h1','t2h2','t2h3','t2h4'],story:['t2s1','t2s2','t2s3','t2s4'],data:['t2d1','t2d2','t2d3','t2d4'],impact:['t2i1','t2i2','t2i3','t2i4'],delivery:['t2del1','t2del2','t2del3','t2del4']};
+  const dimt = {insight:['tmi1','tmi2','tmi3','tmi4','tmi5'],hsdi:['tmh1','tmh2','tmh3','tmh4','tmh5'],bonus:['tmb1','tmb2','tmb3','tmb4','tmb5'],team:['tmt1','tmt2','tmt3','tmt4','tmt5']};
+
+  function showSection(id) {
+    document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    document.getElementById('section-' + id).classList.add('active');
+    document.getElementById('nav-' + id).classList.add('active');
+  }
+
+  function s1(id, val, btn, color) {
+    sc1[id] = val;
+    btn.closest('.score-btns').querySelectorAll('.btn-score').forEach(b => b.className = 'btn-score');
+    btn.classList.add(val === 0 ? 'sel-0' : val === 5 ? 'sel-mid-navy' : 'sel-top-navy');
+    updateT1();
+  }
+
+  function s2(id, val, btn, color) {
+    sc2[id] = val;
+    btn.closest('.score-btns').querySelectorAll('.btn-score').forEach(b => b.className = 'btn-score');
+    btn.classList.add(val === 0 ? 'sel-0' : 'sel-top-olive');
+    updateT2();
+  }
+
+  function st(id, val, btn, color) {
+    sct[id] = val;
+    btn.closest('.score-btns').querySelectorAll('.btn-score').forEach(b => b.className = 'btn-score');
+    btn.classList.add(val === 0 ? 'sel-0' : val === 3 ? 'sel-3' : 'sel-' + color);
+    updateTM();
+  }
+
+  function updateT1() {
+    let total = 0;
+    for (const [dim, ids] of Object.entries(dim1)) {
+      const sub = ids.reduce((s,id) => s+sc1[id], 0);
+      document.getElementById('t1-'+dim+'-sub').textContent = sub;
+      document.getElementById('t1-'+dim+'-bar').style.width = (sub/20*100)+'%';
+      total += sub;
+    }
+    document.getElementById('t1-total').textContent = total;
+  }
+
+  function updateT2() {
+    let total = 0;
+    for (const [dim, ids] of Object.entries(dim2)) {
+      const sub = ids.reduce((s,id) => s+sc2[id], 0);
+      document.getElementById('t2-'+dim+'-sub').textContent = sub;
+      document.getElementById('t2-'+dim+'-bar').style.width = (sub/20*100)+'%';
+      total += sub;
+    }
+    document.getElementById('t2-total').textContent = total;
+  }
+
+  function updateTM() {
+    let total = 0;
+    for (const [dim, ids] of Object.entries(dimt)) {
+      const sub = ids.reduce((s,id) => s+sct[id], 0);
+      document.getElementById('tm-'+dim+'-sub').textContent = sub;
+      document.getElementById('tm-'+dim+'-bar').style.width = (sub/25*100)+'%';
+      total += sub;
+    }
+    document.getElementById('tm-total').textContent = total;
+  }
+
+  function getJudge() {
+    const v = document.getElementById('judge-select').value;
+    return v === 'other' ? (document.getElementById('other-input').value || '其他') : v;
+  }
+
+  function onJudgeChange() {
+    document.getElementById('other-wrap').style.display =
+      document.getElementById('judge-select').value === 'other' ? 'block' : 'none';
+  }
+
+  function sendData(params, btnId, successText) {
+    const btn = document.getElementById(btnId);
+    btn.textContent = '⏳ 送出中...'; btn.disabled = true;
+    const img = new Image();
+    img.onload = img.onerror = function() {
+      btn.textContent = successText; btn.style.background = '#2d6a2d';
+    };
+    img.src = SHEET_URL + '?' + new URLSearchParams(params).toString();
+  }
+
+  function submitTask1() {
+    const contestant = document.getElementById('contestant1').value;
+    const judge = getJudge();
+    if (!contestant) { alert('請選擇參賽者！'); return; }
+    if (!judge) { alert('請選擇評審！'); return; }
+    sendData({
+      contestant, judge,
+      t1_hook: dim1.hook.reduce((s,id)=>s+sc1[id],0),
+      t1_story: dim1.story.reduce((s,id)=>s+sc1[id],0),
+      t1_data: dim1.data.reduce((s,id)=>s+sc1[id],0),
+      t1_impact: dim1.impact.reduce((s,id)=>s+sc1[id],0),
+      t1_delivery: dim1.delivery.reduce((s,id)=>s+sc1[id],0),
+      task1_total: document.getElementById('t1-total').textContent,
+      t2_hook:0, t2_story:0, t2_data:0, t2_impact:0, t2_delivery:0, task2_total:0,
+      comment1: document.getElementById('comment1').value, comment2: ''
+    }, 'submit1', '✅ Task 1 已送出！');
+  }
+
+  function submitTask2() {
+    const contestant = document.getElementById('contestant2').value;
+    const judge = getJudge();
+    if (!contestant) { alert('請選擇參賽者！'); return; }
+    if (!judge) { alert('請選擇評審！'); return; }
+    sendData({
+      contestant, judge,
+      t1_hook:0, t1_story:0, t1_data:0, t1_impact:0, t1_delivery:0, task1_total:0,
+      t2_hook: dim2.hook.reduce((s,id)=>s+sc2[id],0),
+      t2_story: dim2.story.reduce((s,id)=>s+sc2[id],0),
+      t2_data: dim2.data.reduce((s,id)=>s+sc2[id],0),
+      t2_impact: dim2.impact.reduce((s,id)=>s+sc2[id],0),
+      t2_delivery: dim2.delivery.reduce((s,id)=>s+sc2[id],0),
+      task2_total: document.getElementById('t2-total').textContent,
+      comment1: '', comment2: document.getElementById('comment2').value
+    }, 'submit2', '✅ Task 2 已送出！');
+  }
+
+  function submitTeam() {
+    const team = document.getElementById('team-select').value;
+    const judge = getJudge();
+    if (!team) { alert('請選擇隊伍！'); return; }
+    if (!judge) { alert('請選擇評審！'); return; }
+    sendData({
+      type: 'team_score', team, judge,
+      insight: dimt.insight.reduce((s,id)=>s+sct[id],0),
+      hsdi: dimt.hsdi.reduce((s,id)=>s+sct[id],0),
+      bonus: dimt.bonus.reduce((s,id)=>s+sct[id],0),
+      team_collab: dimt.team.reduce((s,id)=>s+sct[id],0),
+      total: document.getElementById('tm-total').textContent,
+      ...Object.fromEntries(Object.keys(sct).map(k=>[k,sct[k]])),
+      comment: document.getElementById('comment-team').value
+    }, 'submit-team', '✅ 團體評分已送出！');
+  }
+
+  function resetTask1() {
+    Object.keys(sc1).forEach(k=>sc1[k]=0);
+    document.getElementById('section-task1').querySelectorAll('.btn-score').forEach(b=>b.className='btn-score');
+    document.getElementById('section-task1').querySelectorAll('.score-btns').forEach(g=>g.querySelectorAll('.btn-score')[0].classList.add('sel-0'));
+    document.getElementById('comment1').value='';
+    const btn=document.getElementById('submit1'); btn.textContent='✅ 送出 Task 1 評分'; btn.disabled=false; btn.style.background='';
+    updateT1();
+  }
+
+  function resetTask2() {
+    Object.keys(sc2).forEach(k=>sc2[k]=0);
+    document.getElementById('section-task2').querySelectorAll('.btn-score').forEach(b=>b.className='btn-score');
+    document.getElementById('section-task2').querySelectorAll('.score-btns').forEach(g=>g.querySelectorAll('.btn-score')[0].classList.add('sel-0'));
+    document.getElementById('comment2').value='';
+    const btn=document.getElementById('submit2'); btn.textContent='✅ 送出 Task 2 評分'; btn.disabled=false; btn.style.background='';
+    updateT2();
+  }
+
+  function resetTeam() {
+    Object.keys(sct).forEach(k=>sct[k]=0);
+    document.getElementById('section-team').querySelectorAll('.btn-score').forEach(b=>b.className='btn-score');
+    document.getElementById('section-team').querySelectorAll('.score-btns').forEach(g=>g.querySelectorAll('.btn-score')[0].classList.add('sel-0'));
+    document.getElementById('comment-team').value='';
+    const btn=document.getElementById('submit-team'); btn.textContent='✅ 送出團體評分'; btn.disabled=false; btn.style.background='';
+    updateTM();
+  }
+
+  document.getElementById('score-date').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
