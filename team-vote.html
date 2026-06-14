@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>團體賽 互評投票</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --gold: #c9973a;
+    --gold-light: #e8b84b;
+    --cream: #f8f4ec;
+    --cream-dark: #ede8dc;
+    --white: #ffffff;
+    --muted: #6b7280;
+    --blue: #1a4474;
+    --green: #2d6a2d;
+    --orange: #c45c0a;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif TC', serif; background: var(--cream); min-height: 100vh; }
+
+  header {
+    background: var(--navy);
+    padding: 24px 24px 20px;
+    border-bottom: 4px solid var(--gold);
+    text-align: center;
+  }
+  header h1 { font-size: 22px; color: var(--white); letter-spacing: 2px; }
+  header p { font-size: 12px; color: var(--gold-light); margin-top: 6px; }
+
+  .container { max-width: 480px; margin: 32px auto; padding: 0 20px 60px; }
+
+  .notice {
+    background: #fef9ee; border: 1.5px solid var(--gold);
+    border-radius: 8px; padding: 12px 16px;
+    font-size: 13px; color: #92610a;
+    margin-bottom: 20px;
+    display: flex; gap: 8px; align-items: flex-start;
+  }
+
+  .card {
+    background: var(--white); border-radius: 14px;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.08);
+    overflow: hidden; margin-bottom: 16px;
+  }
+  .card-header {
+    background: var(--navy); padding: 16px 20px;
+    font-size: 15px; font-weight: 700; color: var(--white);
+  }
+  .card-body { padding: 20px; }
+
+  .field-group { margin-bottom: 16px; }
+  .field-group label { display: block; font-size: 12px; font-weight: 700; color: var(--muted); margin-bottom: 8px; }
+  select {
+    width: 100%; border: 2px solid var(--cream-dark); border-radius: 8px;
+    padding: 12px 16px; font-family: inherit; font-size: 15px;
+    color: var(--navy); background: var(--cream);
+    outline: none; transition: border-color 0.2s; appearance: none;
+  }
+  select:focus { border-color: var(--gold); }
+
+  .team-grid { display: flex; flex-direction: column; gap: 12px; margin-top: 4px; }
+  .team-btn {
+    padding: 18px 20px;
+    border-radius: 12px;
+    border: 2px solid var(--cream-dark);
+    background: var(--cream);
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    color: var(--navy); cursor: pointer;
+    transition: all 0.15s; text-align: left;
+    display: flex; align-items: center; gap: 14px;
+  }
+  .team-btn:hover:not(:disabled) { border-color: var(--gold); background: #fdf8ee; }
+  .team-btn.selected { background: var(--navy); border-color: var(--navy); color: var(--white); }
+  .team-btn:disabled { opacity: 0.3; cursor: not-allowed; background: #e5e7eb; border-color: #e5e7eb; }
+  .team-icon { font-size: 22px; }
+  .team-label { font-size: 16px; font-weight: 700; }
+  .team-sub { font-size: 12px; opacity: 0.6; margin-top: 2px; }
+  .check-icon { margin-left: auto; font-size: 20px; display: none; }
+  .team-btn.selected .check-icon { display: block; }
+
+  .btn-submit {
+    width: 100%; padding: 16px;
+    background: var(--gold); color: var(--white);
+    border: none; border-radius: 10px;
+    font-family: inherit; font-size: 16px; font-weight: 700;
+    cursor: pointer; letter-spacing: 1px; transition: all 0.2s;
+    margin-top: 4px;
+  }
+  .btn-submit:hover:not(:disabled) { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-submit:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
+
+  .error-msg { color: #c0392b; font-size: 13px; margin-top: 8px; display: none; }
+
+  .success-screen { text-align: center; padding: 48px 24px; }
+  .success-screen .icon { font-size: 60px; margin-bottom: 16px; }
+  .success-screen h2 { font-size: 22px; color: var(--navy); margin-bottom: 8px; }
+  .success-screen p { font-size: 14px; color: var(--muted); line-height: 1.6; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🏆 團體賽 互評投票</h1>
+  <p>Business Impact Challenge — Peer Vote</p>
+</header>
+
+<div class="container">
+
+  <div class="notice">
+    <span>⭐</span>
+    <span>每人投<strong>一票</strong>給除了自己隊以外，你認為表現最好的隊伍。每票 <strong>5 分</strong>。</span>
+  </div>
+
+  <div class="card" id="main-card">
+    <div class="card-header">我是誰？</div>
+    <div class="card-body">
+      <div class="field-group">
+        <label>選擇你的名字</label>
+        <select id="voter-select" onchange="onVoterChange()">
+          <option value="">-- 請選擇 --</option>
+          <option>Tina</option><option>Emily</option><option>Emilie</option>
+          <option>Coco</option><option>Aslan</option><option>Shine</option>
+          <option>Eric</option><option>Joyce</option><option>Effie</option>
+          <option>Eve</option><option>K</option><option>Kun</option>
+          <option>Manda</option><option>Nicole</option><option>Sin</option>
+        </select>
+      </div>
+      <div class="field-group">
+        <label>我的隊伍</label>
+        <select id="voter-team" onchange="onTeamChange()">
+          <option value="">-- 請選擇 --</option>
+          <option>Team A</option>
+          <option>Team B</option>
+          <option>Team C</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="vote-card" style="display:none">
+    <div class="card-header">投票給哪個隊？</div>
+    <div class="card-body">
+      <div class="team-grid" id="team-grid"></div>
+      <p class="error-msg" id="error-msg">請先選擇一個隊伍！</p>
+    </div>
+  </div>
+
+  <button class="btn-submit" id="submit-btn" onclick="submitVote()" disabled style="display:none">送出投票 ＋5分</button>
+
+  <div class="card" id="success-card" style="display:none">
+    <div class="success-screen">
+      <div class="icon">🎉</div>
+      <h2>投票完成！</h2>
+      <p id="success-msg"></p>
+    </div>
+  </div>
+
+</div>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbziQMpDJHaaF3U2pTqTMY4LhvU55MwSzyE4zV4MO7qTB2LoQjjCfsxRoez9GzLPUzxmdQ/exec';
+  const teams = ['Team A', 'Team B', 'Team C'];
+  const teamIcons = { 'Team A': '🔵', 'Team B': '🟢', 'Team C': '🟠' };
+
+  let voter = '';
+  let voterTeam = '';
+  let selectedTeam = null;
+
+  function onVoterChange() {
+    voter = document.getElementById('voter-select').value;
+    checkReady();
+  }
+
+  function onTeamChange() {
+    voterTeam = document.getElementById('voter-team').value;
+    selectedTeam = null;
+    if (voterTeam) buildGrid();
+    else {
+      document.getElementById('vote-card').style.display = 'none';
+      document.getElementById('submit-btn').style.display = 'none';
+    }
+    checkReady();
+  }
+
+  function buildGrid() {
+    const grid = document.getElementById('team-grid');
+    grid.innerHTML = '';
+    teams.forEach(team => {
+      const btn = document.createElement('button');
+      btn.className = 'team-btn';
+      btn.id = 'team-btn-' + team.replace(' ','-');
+      btn.innerHTML = `
+        <span class="team-icon">${teamIcons[team]}</span>
+        <div><div class="team-label">${team}</div></div>
+        <span class="check-icon">✓</span>
+      `;
+      if (team === voterTeam) {
+        btn.disabled = true;
+        btn.querySelector('.team-label').textContent += '（自己的隊）';
+      } else {
+        btn.onclick = () => selectTeam(team);
+      }
+      grid.appendChild(btn);
+    });
+    document.getElementById('vote-card').style.display = 'block';
+    document.getElementById('submit-btn').style.display = 'block';
+    document.getElementById('submit-btn').disabled = true;
+  }
+
+  function selectTeam(team) {
+    selectedTeam = team;
+    document.querySelectorAll('.team-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('team-btn-' + team.replace(' ','-')).classList.add('selected');
+    document.getElementById('submit-btn').disabled = false;
+    document.getElementById('error-msg').style.display = 'none';
+  }
+
+  function checkReady() {
+    if (voter && voterTeam) {
+      document.getElementById('vote-card').style.display = 'block';
+    }
+  }
+
+  function submitVote() {
+    if (!voter || !voterTeam) { alert('請先選擇名字和隊伍！'); return; }
+    if (!selectedTeam) { document.getElementById('error-msg').style.display = 'block'; return; }
+
+    const btn = document.getElementById('submit-btn');
+    btn.textContent = '⏳ 送出中...'; btn.disabled = true;
+
+    const params = new URLSearchParams({
+      type: 'team_vote',
+      voter, voter_team: voterTeam,
+      votee: selectedTeam, points: 5
+    });
+
+    const img = new Image();
+    img.onload = img.onerror = function() {
+      document.getElementById('main-card').style.display = 'none';
+      document.getElementById('vote-card').style.display = 'none';
+      btn.style.display = 'none';
+      document.getElementById('success-card').style.display = 'block';
+      document.getElementById('success-msg').textContent =
+        voter + ' 投票給 ' + selectedTeam + ' ＋5分！感謝你的參與！';
+    };
+    img.src = SHEET_URL + '?' + params.toString();
+  }
+</script>
+</body>
+</html>

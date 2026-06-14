@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>團體賽評分表 — Business Impact Challenge</title>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --navy: #1a2744;
+    --gold: #c9973a;
+    --gold-light: #e8b84b;
+    --blue: #1a4474;
+    --green: #2d6a2d;
+    --orange: #c45c0a;
+    --purple: #5b2d8e;
+    --cream: #f8f4ec;
+    --cream-dark: #ede8dc;
+    --white: #ffffff;
+    --muted: #6b7280;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Noto Serif TC', serif; background: var(--cream); min-height: 100vh; }
+
+  header {
+    background: var(--navy);
+    padding: 24px 32px 20px;
+    border-bottom: 4px solid var(--gold);
+    display: flex; align-items: center; gap: 16px;
+  }
+  .header-icon { font-size: 36px; }
+  header h1 { font-size: 22px; font-weight: 700; color: var(--white); letter-spacing: 1px; }
+  header p { font-size: 12px; color: var(--gold-light); margin-top: 4px; }
+  .header-badge {
+    margin-left: auto;
+    background: var(--gold); color: var(--white);
+    font-size: 12px; font-weight: 700;
+    padding: 6px 14px; border-radius: 20px; white-space: nowrap;
+  }
+
+  /* Setup */
+  .setup-panel {
+    background: var(--white);
+    border-bottom: 1px solid var(--cream-dark);
+    padding: 18px 32px;
+    display: flex; align-items: flex-end; gap: 20px; flex-wrap: wrap;
+  }
+  .field-group { display: flex; flex-direction: column; gap: 5px; }
+  .field-group label { font-size: 12px; font-weight: 700; color: var(--muted); letter-spacing: 0.5px; }
+  select, input[type="text"], input[type="date"] {
+    border: 2px solid var(--cream-dark); border-radius: 7px;
+    padding: 9px 13px; font-family: inherit; font-size: 14px;
+    color: var(--navy); background: var(--cream);
+    outline: none; transition: border-color 0.2s;
+  }
+  select:focus, input:focus { border-color: var(--gold); }
+  .separator { width: 1px; height: 40px; background: var(--cream-dark); }
+
+  /* Score legend */
+  .legend {
+    display: flex; gap: 12px; align-items: center;
+    padding: 10px 32px; background: var(--cream);
+    border-bottom: 1px solid var(--cream-dark);
+    font-size: 12px; color: var(--muted);
+  }
+  .legend-item { display: flex; align-items: center; gap: 6px; }
+  .legend-dot {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; font-weight: 700; color: var(--white);
+  }
+  .dot-0 { background: #cbd5e1; color: #475569; }
+  .dot-3 { background: var(--gold); }
+  .dot-5 { background: var(--navy); }
+
+  /* Main grid */
+  main {
+    max-width: 1300px; margin: 28px auto;
+    padding: 0 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+  }
+  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+
+  /* Dimension card */
+  .dim-card {
+    background: var(--white);
+    border-radius: 14px;
+    overflow: hidden;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.08);
+  }
+  .dim-header {
+    padding: 16px 20px;
+    display: flex; align-items: center; gap: 12px;
+    color: var(--white);
+  }
+  .dim-header.blue { background: var(--blue); }
+  .dim-header.green { background: var(--green); }
+  .dim-header.orange { background: var(--orange); }
+  .dim-header.purple { background: var(--purple); }
+  .dim-icon { font-size: 22px; }
+  .dim-title { font-size: 16px; font-weight: 700; }
+  .dim-sub { font-size: 11px; opacity: 0.8; }
+  .dim-max { margin-left: auto; font-size: 13px; opacity: 0.8; font-family: 'DM Mono', monospace; }
+
+  /* Criteria rows */
+  .criteria-row {
+    display: flex; align-items: center; gap: 12px;
+    padding: 11px 20px;
+    border-bottom: 1px solid var(--cream-dark);
+    transition: background 0.15s;
+  }
+  .criteria-row:last-of-type { border-bottom: none; }
+  .criteria-row:hover { background: var(--cream); }
+  .criteria-num {
+    width: 22px; height: 22px; border-radius: 50%;
+    background: var(--cream-dark); color: var(--muted);
+    font-size: 11px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    flex-shrink: 0;
+  }
+  .criteria-label { flex: 1; font-size: 13px; color: var(--navy); line-height: 1.4; }
+  .score-btns { display: flex; gap: 6px; flex-shrink: 0; }
+  .btn-score {
+    width: 38px; height: 38px; border-radius: 50%;
+    border: 2px solid var(--cream-dark);
+    background: var(--white);
+    font-family: 'DM Mono', monospace; font-size: 13px; font-weight: 600;
+    cursor: pointer; color: var(--muted);
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .btn-score:hover { border-color: var(--gold); color: var(--gold); }
+  .btn-score.sel-0 { background: #cbd5e1; border-color: #94a3b8; color: #475569; }
+  .btn-score.sel-3 { background: var(--gold); border-color: var(--gold); color: var(--white); }
+  .btn-score.sel-5 { background: var(--navy); border-color: var(--navy); color: var(--white); }
+
+  /* Subtotal bar */
+  .subtotal-row {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 20px 14px;
+    background: var(--cream);
+  }
+  .progress-wrap { flex: 1; margin-right: 12px; }
+  .progress-track { height: 6px; border-radius: 3px; background: var(--cream-dark); overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
+  .fill-blue { background: var(--blue); }
+  .fill-green { background: var(--green); }
+  .fill-orange { background: var(--orange); }
+  .fill-purple { background: var(--purple); }
+  .subtotal-val {
+    font-family: 'DM Mono', monospace; font-size: 20px; font-weight: 700;
+    white-space: nowrap;
+  }
+
+  /* Total footer */
+  .total-footer {
+    max-width: 1300px; margin: 8px auto 0; padding: 0 20px;
+  }
+  .total-card {
+    background: var(--navy); border-radius: 14px;
+    padding: 20px 28px;
+    display: flex; align-items: center; justify-content: space-between;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.15);
+  }
+  .total-label { font-size: 14px; font-weight: 700; color: rgba(255,255,255,0.7); letter-spacing: 2px; }
+  .total-score { font-family: 'DM Mono', monospace; font-size: 42px; font-weight: 700; color: var(--white); }
+  .total-max { font-size: 16px; color: rgba(255,255,255,0.4); }
+  .total-breakdown {
+    display: flex; gap: 20px;
+  }
+  .breakdown-item { text-align: center; }
+  .breakdown-val { font-family: 'DM Mono', monospace; font-size: 18px; font-weight: 700; }
+  .breakdown-label { font-size: 10px; color: rgba(255,255,255,0.5); margin-top: 2px; }
+
+  /* Comment */
+  .comment-wrap {
+    max-width: 1300px; margin: 16px auto 0; padding: 0 20px;
+  }
+  .comment-card {
+    background: var(--white); border-radius: 14px; padding: 20px;
+    box-shadow: 0 2px 16px rgba(26,39,68,0.08);
+  }
+  .comment-card label { font-size: 12px; font-weight: 700; color: var(--muted); display: block; margin-bottom: 8px; }
+  .comment-card textarea {
+    width: 100%; border: 2px solid var(--cream-dark); border-radius: 8px;
+    padding: 10px 14px; font-family: inherit; font-size: 13px;
+    color: var(--navy); background: var(--cream);
+    resize: vertical; min-height: 72px; outline: none;
+    transition: border-color 0.2s;
+  }
+  .comment-card textarea:focus { border-color: var(--gold); }
+
+  /* Actions */
+  .actions {
+    max-width: 1300px; margin: 16px auto 40px; padding: 0 20px;
+    display: flex; gap: 12px; flex-wrap: wrap;
+  }
+  .btn-action {
+    padding: 13px 24px; border-radius: 8px; border: none;
+    cursor: pointer; font-family: inherit; font-size: 14px; font-weight: 700;
+    letter-spacing: 0.5px; transition: all 0.2s;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .btn-primary { background: var(--navy); color: var(--white); }
+  .btn-primary:hover { background: #263354; transform: translateY(-1px); }
+  .btn-gold { background: var(--gold); color: var(--white); }
+  .btn-gold:hover { background: var(--gold-light); transform: translateY(-1px); }
+  .btn-ghost { background: var(--white); color: var(--muted); border: 2px solid var(--cream-dark); }
+  .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-icon">🏆</div>
+  <div>
+    <h1>團體賽評分表</h1>
+    <p>Business Impact Challenge</p>
+  </div>
+  <span class="header-badge">0 / 3 / 5 制</span>
+</header>
+
+<div class="setup-panel">
+  <div class="field-group">
+    <label>參賽隊伍</label>
+    <select id="team-select" style="width:130px;">
+      <option value="">-- 請選擇 --</option>
+      <option>Team A</option>
+      <option>Team B</option>
+      <option>Team C</option>
+    </select>
+  </div>
+  <div class="separator"></div>
+  <div class="field-group">
+    <label>評審</label>
+    <select id="judge-select" style="width:120px;" onchange="onJudgeChange()">
+      <option value="">-- 請選擇 --</option>
+      <option>Nina</option>
+      <option>Allen</option>
+      <option value="other">其他</option>
+    </select>
+  </div>
+  <div class="field-group" id="other-judge-wrap" style="display:none">
+    <label>評審姓名</label>
+    <input type="text" id="other-judge-input" placeholder="請輸入姓名" style="width:130px;">
+  </div>
+  <div class="separator"></div>
+  <div class="field-group">
+    <label>日期</label>
+    <input type="date" id="score-date" style="width:150px;">
+  </div>
+</div>
+
+<div class="legend">
+  <span class="legend-item"><span class="legend-dot dot-0">0</span> 未明顯呈現或未達標準</span>
+  <span class="legend-item"><span class="legend-dot dot-3">3</span> 有呈現但不夠完整</span>
+  <span class="legend-item"><span class="legend-dot dot-5">5</span> 表現明確且具影響力</span>
+</div>
+
+<main>
+
+  <!-- 關鍵洞察 -->
+  <div class="dim-card">
+    <div class="dim-header blue">
+      <span class="dim-icon">🔍</span>
+      <div>
+        <div class="dim-title">關鍵洞察 Key Insight</div>
+        <div class="dim-sub">找到真正有影響力的問題與機會</div>
+      </div>
+      <span class="dim-max"><span id="insight-sub">0</span>/25</span>
+    </div>
+    <div class="criteria-row"><span class="criteria-num">1</span><span class="criteria-label">是否找到真正問題核心</span><div class="score-btns" data-id="i1" data-color="blue"><button class="btn-score sel-0" onclick="setScore('i1',0,this,'blue')">0</button><button class="btn-score" onclick="setScore('i1',3,this,'blue')">3</button><button class="btn-score" onclick="setScore('i1',5,this,'blue')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">2</span><span class="criteria-label">是否有明確機會點</span><div class="score-btns" data-id="i2" data-color="blue"><button class="btn-score sel-0" onclick="setScore('i2',0,this,'blue')">0</button><button class="btn-score" onclick="setScore('i2',3,this,'blue')">3</button><button class="btn-score" onclick="setScore('i2',5,this,'blue')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">3</span><span class="criteria-label">是否有邏輯推導</span><div class="score-btns" data-id="i3" data-color="blue"><button class="btn-score sel-0" onclick="setScore('i3',0,this,'blue')">0</button><button class="btn-score" onclick="setScore('i3',3,this,'blue')">3</button><button class="btn-score" onclick="setScore('i3',5,this,'blue')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">4</span><span class="criteria-label">洞察是否具深度</span><div class="score-btns" data-id="i4" data-color="blue"><button class="btn-score sel-0" onclick="setScore('i4',0,this,'blue')">0</button><button class="btn-score" onclick="setScore('i4',3,this,'blue')">3</button><button class="btn-score" onclick="setScore('i4',5,this,'blue')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">5</span><span class="criteria-label">觀點是否具商業影響力</span><div class="score-btns" data-id="i5" data-color="blue"><button class="btn-score sel-0" onclick="setScore('i5',0,this,'blue')">0</button><button class="btn-score" onclick="setScore('i5',3,this,'blue')">3</button><button class="btn-score" onclick="setScore('i5',5,this,'blue')">5</button></div></div>
+    <div class="subtotal-row">
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-blue" id="insight-bar" style="width:0%"></div></div></div>
+      <span class="subtotal-val" style="color:var(--blue)"><span id="insight-sub2">0</span>/25</span>
+    </div>
+  </div>
+
+  <!-- 運用 HSDI 模型 -->
+  <div class="dim-card">
+    <div class="dim-header green">
+      <span class="dim-icon">🎙️</span>
+      <div>
+        <div class="dim-title">運用 HSDI 模型</div>
+        <div class="dim-sub">Hook · Story · Data · Impact</div>
+      </div>
+      <span class="dim-max"><span id="hsdi-sub">0</span>/25</span>
+    </div>
+    <div class="criteria-row"><span class="criteria-num">1</span><span class="criteria-label">Hook 是否清楚吸引</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('h1',0,this,'green')">0</button><button class="btn-score" onclick="setScore('h1',3,this,'green')">3</button><button class="btn-score" onclick="setScore('h1',5,this,'green')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">2</span><span class="criteria-label">Story 是否有完整脈絡</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('h2',0,this,'green')">0</button><button class="btn-score" onclick="setScore('h2',3,this,'green')">3</button><button class="btn-score" onclick="setScore('h2',5,this,'green')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">3</span><span class="criteria-label">Data 是否有效支撐觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('h3',0,this,'green')">0</button><button class="btn-score" onclick="setScore('h3',3,this,'green')">3</button><button class="btn-score" onclick="setScore('h3',5,this,'green')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">4</span><span class="criteria-label">Impact 是否明確有力</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('h4',0,this,'green')">0</button><button class="btn-score" onclick="setScore('h4',3,this,'green')">3</button><button class="btn-score" onclick="setScore('h4',5,this,'green')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">5</span><span class="criteria-label">整體頁面串聯是否流暢</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('h5',0,this,'green')">0</button><button class="btn-score" onclick="setScore('h5',3,this,'green')">3</button><button class="btn-score" onclick="setScore('h5',5,this,'green')">5</button></div></div>
+    <div class="subtotal-row">
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-green" id="hsdi-bar" style="width:0%"></div></div></div>
+      <span class="subtotal-val" style="color:var(--green)"><span id="hsdi-sub2">0</span>/25</span>
+    </div>
+  </div>
+
+  <!-- 報告加分技巧 -->
+  <div class="dim-card">
+    <div class="dim-header orange">
+      <span class="dim-icon">⭐</span>
+      <div>
+        <div class="dim-title">報告加分技巧</div>
+        <div class="dim-sub">Bonus Techniques</div>
+      </div>
+      <span class="dim-max"><span id="bonus-sub">0</span>/25</span>
+    </div>
+    <div class="criteria-row"><span class="criteria-num">1</span><span class="criteria-label">內容重點是否聚焦</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('b1',0,this,'orange')">0</button><button class="btn-score" onclick="setScore('b1',3,this,'orange')">3</button><button class="btn-score" onclick="setScore('b1',5,this,'orange')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">2</span><span class="criteria-label">是否有記憶點／金句</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('b2',0,this,'orange')">0</button><button class="btn-score" onclick="setScore('b2',3,this,'orange')">3</button><button class="btn-score" onclick="setScore('b2',5,this,'orange')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">3</span><span class="criteria-label">是否有效運用資訊支持觀點</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('b3',0,this,'orange')">0</button><button class="btn-score" onclick="setScore('b3',3,this,'orange')">3</button><button class="btn-score" onclick="setScore('b3',5,this,'orange')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">4</span><span class="criteria-label">表達是否有節奏感</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('b4',0,this,'orange')">0</button><button class="btn-score" onclick="setScore('b4',3,this,'orange')">3</button><button class="btn-score" onclick="setScore('b4',5,this,'orange')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">5</span><span class="criteria-label">整體專業度與完成度</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('b5',0,this,'orange')">0</button><button class="btn-score" onclick="setScore('b5',3,this,'orange')">3</button><button class="btn-score" onclick="setScore('b5',5,this,'orange')">5</button></div></div>
+    <div class="subtotal-row">
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-orange" id="bonus-bar" style="width:0%"></div></div></div>
+      <span class="subtotal-val" style="color:var(--orange)"><span id="bonus-sub2">0</span>/25</span>
+    </div>
+  </div>
+
+  <!-- 團隊合作 -->
+  <div class="dim-card">
+    <div class="dim-header purple">
+      <span class="dim-icon">🤝</span>
+      <div>
+        <div class="dim-title">團隊合作 Team Collaboration</div>
+        <div class="dim-sub">分工、默契與整體呈現</div>
+      </div>
+      <span class="dim-max"><span id="team-sub">0</span>/25</span>
+    </div>
+    <div class="criteria-row"><span class="criteria-num">1</span><span class="criteria-label">團隊分工是否平均</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('t1',0,this,'purple')">0</button><button class="btn-score" onclick="setScore('t1',3,this,'purple')">3</button><button class="btn-score" onclick="setScore('t1',5,this,'purple')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">2</span><span class="criteria-label">每位成員是否參與</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('t2',0,this,'purple')">0</button><button class="btn-score" onclick="setScore('t2',3,this,'purple')">3</button><button class="btn-score" onclick="setScore('t2',5,this,'purple')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">3</span><span class="criteria-label">團隊默契與銜接</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('t3',0,this,'purple')">0</button><button class="btn-score" onclick="setScore('t3',3,this,'purple')">3</button><button class="btn-score" onclick="setScore('t3',5,this,'purple')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">4</span><span class="criteria-label">時間掌控是否良好</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('t4',0,this,'purple')">0</button><button class="btn-score" onclick="setScore('t4',3,this,'purple')">3</button><button class="btn-score" onclick="setScore('t4',5,this,'purple')">5</button></div></div>
+    <div class="criteria-row"><span class="criteria-num">5</span><span class="criteria-label">團隊整體呈現感</span><div class="score-btns"><button class="btn-score sel-0" onclick="setScore('t5',0,this,'purple')">0</button><button class="btn-score" onclick="setScore('t5',3,this,'purple')">3</button><button class="btn-score" onclick="setScore('t5',5,this,'purple')">5</button></div></div>
+    <div class="subtotal-row">
+      <div class="progress-wrap"><div class="progress-track"><div class="progress-fill fill-purple" id="team-bar" style="width:0%"></div></div></div>
+      <span class="subtotal-val" style="color:var(--purple)"><span id="team-sub2">0</span>/25</span>
+    </div>
+  </div>
+
+</main>
+
+<!-- Total -->
+<div class="total-footer">
+  <div class="total-card">
+    <div>
+      <div class="total-label">TOTAL SCORE</div>
+      <div><span class="total-score" id="grand-total">0</span><span class="total-max"> / 100</span></div>
+    </div>
+    <div class="total-breakdown">
+      <div class="breakdown-item"><div class="breakdown-val" style="color:#7fb3f5" id="br-insight">0</div><div class="breakdown-label">關鍵洞察</div></div>
+      <div class="breakdown-item"><div class="breakdown-val" style="color:#7fc97f" id="br-hsdi">0</div><div class="breakdown-label">HSDI</div></div>
+      <div class="breakdown-item"><div class="breakdown-val" style="color:#f5b87f" id="br-bonus">0</div><div class="breakdown-label">加分技巧</div></div>
+      <div class="breakdown-item"><div class="breakdown-val" style="color:#c47fff" id="br-team">0</div><div class="breakdown-label">團隊合作</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- Comment -->
+<div class="comment-wrap">
+  <div class="comment-card">
+    <label>評審備註</label>
+    <textarea id="comment" placeholder="針對本隊表現的補充說明或觀察..."></textarea>
+  </div>
+</div>
+
+<!-- Actions -->
+<div class="actions">
+  <button class="btn-action btn-gold" onclick="submitScores()">✅ 送出評分</button>
+  <button class="btn-action btn-ghost" onclick="resetAll()">🔄 重置</button>
+</div>
+
+<script>
+  const SHEET_URL = 'https://script.google.com/macros/s/AKfycbziQMpDJHaaF3U2pTqTMY4LhvU55MwSzyE4zV4MO7qTB2LoQjjCfsxRoez9GzLPUzxmdQ/exec';
+
+  const scores = { i1:0,i2:0,i3:0,i4:0,i5:0, h1:0,h2:0,h3:0,h4:0,h5:0, b1:0,b2:0,b3:0,b4:0,b5:0, t1:0,t2:0,t3:0,t4:0,t5:0 };
+
+  const dimIds = {
+    insight: ['i1','i2','i3','i4','i5'],
+    hsdi:    ['h1','h2','h3','h4','h5'],
+    bonus:   ['b1','b2','b3','b4','b5'],
+    team:    ['t1','t2','t3','t4','t5']
+  };
+
+  function setScore(id, val, btn, color) {
+    scores[id] = val;
+    const row = btn.closest('.score-btns');
+    row.querySelectorAll('.btn-score').forEach(b => b.className = 'btn-score');
+    if (val === 0) btn.classList.add('sel-0');
+    else if (val === 3) btn.classList.add('sel-3');
+    else btn.classList.add('sel-5');
+    updateTotals();
+  }
+
+  function updateTotals() {
+    let grand = 0;
+    for (const [dim, ids] of Object.entries(dimIds)) {
+      const sub = ids.reduce((s, id) => s + scores[id], 0);
+      document.getElementById(dim + '-sub').textContent = sub;
+      document.getElementById(dim + '-sub2').textContent = sub;
+      document.getElementById('br-' + dim).textContent = sub;
+      document.getElementById(dim + '-bar').style.width = (sub / 25 * 100) + '%';
+      grand += sub;
+    }
+    document.getElementById('grand-total').textContent = grand;
+  }
+
+  function onJudgeChange() {
+    const val = document.getElementById('judge-select').value;
+    document.getElementById('other-judge-wrap').style.display = val === 'other' ? 'block' : 'none';
+  }
+
+  function getJudgeName() {
+    const val = document.getElementById('judge-select').value;
+    if (val === 'other') return document.getElementById('other-judge-input').value || '其他';
+    return val;
+  }
+
+  function submitScores() {
+    const team = document.getElementById('team-select').value;
+    const judge = getJudgeName();
+    if (!team) { alert('請先選擇參賽隊伍！'); return; }
+    if (!judge) { alert('請先選擇評審！'); return; }
+
+    const btn = document.querySelector('.btn-gold');
+    btn.textContent = '⏳ 送出中...'; btn.disabled = true;
+
+    const params = new URLSearchParams({
+      type: 'team_score',
+      team, judge,
+      insight: dimIds.insight.reduce((s,id)=>s+scores[id],0),
+      hsdi: dimIds.hsdi.reduce((s,id)=>s+scores[id],0),
+      bonus: dimIds.bonus.reduce((s,id)=>s+scores[id],0),
+      team_collab: dimIds.team.reduce((s,id)=>s+scores[id],0),
+      total: document.getElementById('grand-total').textContent,
+      i1:scores.i1,i2:scores.i2,i3:scores.i3,i4:scores.i4,i5:scores.i5,
+      h1:scores.h1,h2:scores.h2,h3:scores.h3,h4:scores.h4,h5:scores.h5,
+      b1:scores.b1,b2:scores.b2,b3:scores.b3,b4:scores.b4,b5:scores.b5,
+      t1:scores.t1,t2:scores.t2,t3:scores.t3,t4:scores.t4,t5:scores.t5,
+      comment: document.getElementById('comment').value,
+      date: document.getElementById('score-date').value
+    });
+
+    const img = new Image();
+    img.onload = img.onerror = function() {
+      btn.textContent = '✅ 已送出！';
+      btn.style.background = '#2d6a2d';
+    };
+    img.src = SHEET_URL + '?' + params.toString();
+  }
+
+  function resetAll() {
+    Object.keys(scores).forEach(k => scores[k] = 0);
+    document.querySelectorAll('.btn-score').forEach(b => b.className = 'btn-score');
+    document.querySelectorAll('.score-btns').forEach(btns => {
+      btns.querySelectorAll('.btn-score')[0].classList.add('sel-0');
+    });
+    document.getElementById('comment').value = '';
+    const btn = document.querySelector('.btn-gold');
+    btn.textContent = '✅ 送出評分'; btn.disabled = false; btn.style.background = '';
+    updateTotals();
+  }
+
+  document.getElementById('score-date').value = new Date().toISOString().split('T')[0];
+</script>
+</body>
+</html>
